@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
 
+export const dynamic = 'force-dynamic'; // Isso força a página a ser renderizada apenas no servidor (em tempo de requisição)
+
 interface SuccessPageProps {
   searchParams: Promise<{ session_id?: string }>;
 }
