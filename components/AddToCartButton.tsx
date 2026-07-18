@@ -1,6 +1,8 @@
 'use client'; // <-- Isso avisa ao Next.js que este componente roda no navegador
 
 import { Button } from '@/components/ui/button';
+import { checkoutButtonStyle } from '@/lib/styles';
+import { cn } from '@/lib/utils';
 import { useCartStore } from '@/store/useCartStore';
 import { ShoppingCart } from 'lucide-react'; // Ícone nativo que já vem com shadcn
 
@@ -24,8 +26,10 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
 
   return (
     <Button
-      className='w-full bg-(--primary-color) text-black flex justify-center items-center cursor-pointer
-             hover:bg-black hover:text-(--primary-color) transition-all duration-300'
+      className={cn(
+        checkoutButtonStyle,
+        'w-full flex justify-center items-center',
+      )}
       onClick={handleAddToCart}
     >
       <ShoppingCart className='mr-2 h-4 w-4' />

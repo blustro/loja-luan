@@ -13,27 +13,22 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
 import Image from 'next/image';
-import { Elements } from '@stripe/react-stripe-js';
-import stripePromise from '@/lib/stripe-client';
 import { createCheckoutSession } from '@/app/actions/checkout';
-import { CheckoutForm } from './CheckoutForm';
-import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import { checkoutButtonStyle } from '@/lib/styles';
 
 export default function CartSidebar() {
   const { items, increaseQuantity, decreaseQuantity, removeItem } =
     useCartStore();
 
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-
   const handleCheckout = async () => {
-    // O TypeScript agora sabe que 'result' segue o modelo CheckoutResponse
-    const result = await createCheckoutSession(items);
+    const response = await createCheckoutSession(items);
 
-    if (result.success && result.clientSecret) {
-      setClientSecret(result.clientSecret);
-    } else {
-      // Aqui você pode tratar o erro, por exemplo:
-      alert(result.error || 'Erro desconhecido');
+    if (response.url) {
+      // Redireciona o usuário para a página do Stripe
+      window.location.href = response.url;
+    } else if (response.error) {
+      alert(response.error);
     }
   };
 
@@ -129,19 +124,16 @@ export default function CartSidebar() {
                   <span>Total</span>
                   <span>R$ {total.toFixed(2)}</span>
                 </div>
-                {clientSecret ? (
-                  <Elements stripe={stripePromise} options={{ clientSecret }}>
-                    <CheckoutForm />
-                  </Elements>
-                ) : (
-                  <Button
-                    className='w-full h-12 text-base'
-                    size='lg'
-                    onClick={handleCheckout}
-                  >
-                    Finalizar Compra
-                  </Button>
-                )}
+
+                <button
+                  onClick={handleCheckout}
+                  className={cn(
+                    checkoutButtonStyle,
+                    'w-full p-3 font-bold rounded',
+                  )}
+                >
+                  Finalizar Compra
+                </button>
               </div>
             </>
           )}
