@@ -28,7 +28,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
     <Button
       className={cn(
         checkoutButtonStyle,
-        'w-full flex justify-center items-center',
+        'w-full flex justify-center items-center font-bold',
       )}
       onClick={handleAddToCart}
     >

@@ -1,2 +1,2 @@
 export const checkoutButtonStyle =
-  'bg-[var(--primary-color)] text-black cursor-pointer hover:bg-black hover:text-[var(--primary-color)] transition-all duration-300';
+  'bg-[var(--primary-color)] text-primary cursor-pointer hover:bg-primary hover:text-[var(--primary-color)] transition-all duration-300';
