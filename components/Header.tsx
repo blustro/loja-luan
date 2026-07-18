@@ -3,6 +3,8 @@ import { client } from '@/sanity/lib/client';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CartSidebarWrapper } from './CartSidebarWrapper'; // Importe aqui
+import { Suspense } from 'react';
+import { SearchBar } from './SearchBar';
 
 export default async function Header() {
   const data = await client.fetch(`{
@@ -17,17 +19,28 @@ export default async function Header() {
       style={
         { '--primary-color': settings?.primaryColor } as React.CSSProperties
       }
-      className='border-b'
+      className='border-b bg-white sticky top-0 z-50'
     >
-      <div className='container mx-auto max-w-6xl p-4 flex items-center justify-between'>
+      <div className='container mx-auto px-4 h-16 flex items-center justify-between gap-2 md:gap-6'>
         {/* Logo */}
-        <Link href='/'>
+        <Link href='/' className=' md:min-w-fit shrink-0'>
           {settings?.logo ? (
-            <Image src={settings.logo} alt='Logo' width={120} height={40} />
+            <Image src={settings.logo} alt='Logo' width={85} height={40} />
           ) : (
             <span className='text-xl font-bold'>Mano do Corre</span>
           )}
         </Link>
+
+        {/* Barra de Busca com Suspense */}
+        <div className='flex-1 flex justify-center px-1 md:px-0'>
+          <Suspense
+            fallback={
+              <div className='h-9 w-full max-w-xs md:max-w-md bg-muted animate-pulse rounded-md' />
+            }
+          >
+            <SearchBar />
+          </Suspense>
+        </div>
 
         {/* Menu de Categorias */}
         <nav>
@@ -44,7 +57,6 @@ export default async function Header() {
             ))}
           </ul>
         </nav>
-
         {/* Carrinho (agora dentro do header) */}
         <div>
           <CartSidebarWrapper />

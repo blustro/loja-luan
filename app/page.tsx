@@ -12,26 +12,37 @@ interface Product {
   _id: string;
   title: string;
   price: number;
-  slug: string;
+  slug: { current: string }; // <-- Atualize esta linha
   imageUrl: string;
   categoryName: string;
 }
 
-// 3. Query do Sanity
-const GET_PRODUCTS_QUERY = `
-  *[_type == "product"] {
-    _id,
-    title,
-    price,
-    "slug": slug.current,
-    "imageUrl": images[0].asset->url,
-    "categoryName": category->title
-  }
-`;
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: { query?: string; category: string };
+}) {
+  const { query, category } = await searchParams;
+  // Monta a query dinamicamente
+  const filter = [
+    `_type == 'product'`,
+    query ? `title match '${query}*'` : '',
+    category ? `category->slug.current == '${category}'` : '', // <-- Adicionei o ' no final
+  ]
+    .filter(Boolean)
+    .join(' && ');
 
-export default async function Home() {
   // 4. Busca os dados
-  const products: Product[] = await client.fetch(GET_PRODUCTS_QUERY);
+  const products: Product[] = await client.fetch(
+    `*[_type == 'product' && ${filter || 'true'}] {
+      _id,
+      title,
+      price,
+      slug,
+      "imageUrl": coalesce(image.asset->url, images[0].asset->url),
+      "categoryName": category->title
+    }`,
+  );
 
   return (
     <main className='container mx-auto max-w-6xl p-8'>
@@ -42,20 +53,21 @@ export default async function Home() {
           // 1. Adicionamos 'flex flex-col' no Link para ele esticar na célula da grid
           <Link
             key={product._id}
-            href={`/product/${product.slug}`}
+            href={`/product/${product.slug.current}`}
             className='flex flex-col'
           >
             {/* 2. Adicionamos 'h-full' para o Card preencher o Link */}
             <Card className='flex flex-col h-full overflow-hidden'>
               {/* Imagem do Produto */}
               {product.imageUrl && (
-                <div className='h-48 overflow-hidden bg-muted'>
+                // 1. Adicionamos a classe 'relative' e 'w-full' no container pai
+                <div className='relative w-full h-48 overflow-hidden bg-muted'>
                   <Image
                     src={product.imageUrl}
                     alt={product.title}
-                    width={400}
-                    height={300}
-                    className='w-full h-full object-cover transition-transform hover:scale-105'
+                    fill
+                    sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw'
+                    className='object-cover transition-transform hover:scale-105'
                   />
                 </div>
               )}
