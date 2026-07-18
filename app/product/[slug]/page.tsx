@@ -42,7 +42,7 @@ export default async function ProductPage({
       {/* Detalhes */}
       <div className='flex flex-col gap-4'>
         <h1 className='text-4xl font-bold'>{product.title}</h1>
-        <p className='text-2xl font-semibold text-(--primary-color)'>
+        <p className='text-2xl font-semibold text-primary'>
           R$ {product.price.toFixed(2)}
         </p>
         <p className='text-gray-600'>{product.description}</p>

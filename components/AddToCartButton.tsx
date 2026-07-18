@@ -19,7 +19,9 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
   // Puxamos a função de adicionar do nosso Zustand
   const addItem = useCartStore((state) => state.addItem);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     addItem(product);
     alert(`${product.title} adicionado ao carrinho!`); // Um aviso simples por enquanto
   };
