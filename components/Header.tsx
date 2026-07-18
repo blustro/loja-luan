@@ -49,7 +49,7 @@ export default async function Header() {
               <li key={cat.slug}>
                 <Link
                   href={`/category/${cat.slug}`}
-                  className='relative group py-2 text-black'
+                  className='relative group py-2 text-black hover:font-bold'
                 >
                   {cat.title}
                   <span className='absolute left-0 bottom-0 w-0 h-0.5 bg-(--primary-color) transition-all duration-300 group-hover:w-full' />
