@@ -72,9 +72,11 @@ export default function CartSidebar() {
             <>
               <div className='flex-1 overflow-y-auto py-6 space-y-6'>
                 {items.map((item) => (
-                  <div key={item._id} className='flex gap-4 items-center'>
-                    {/* ... (o resto do seu código de listagem permanece igual) */}
-                    <div className='h-16 w-16 bg-muted rounded overflow-hidden relative shrink-0'>
+                  <div
+                    key={item._id}
+                    className='flex gap-4 items-center border-b'
+                  >
+                    <div className='h-16 w-16 bg-muted rounded overflow-hidden relative shrink-0 ml-4'>
                       <Image
                         src={item.imageUrl}
                         alt={item.title}
@@ -88,7 +90,7 @@ export default function CartSidebar() {
                         R$ {item.price.toFixed(2)}
                       </p>
                     </div>
-                    <div className='flex items-center gap-2'>
+                    <div className='flex items-center gap-2 mr-2'>
                       <Button
                         variant='outline'
                         size='icon'
@@ -121,9 +123,9 @@ export default function CartSidebar() {
                 ))}
               </div>
 
-              <div className='pt-4'>
+              <div className='mt-auto border-t p-4 space-y-4'>
                 <Separator className='mb-4' />
-                <div className='flex justify-between font-semibold text-lg mb-4'>
+                <div className='flex justify-between font-semibold text-lg mb-4 mx-4'>
                   <span>Total</span>
                   <span>R$ {total.toFixed(2)}</span>
                 </div>
@@ -132,7 +134,11 @@ export default function CartSidebar() {
                     <CheckoutForm />
                   </Elements>
                 ) : (
-                  <Button className='w-full' size='lg' onClick={handleCheckout}>
+                  <Button
+                    className='w-full h-12 text-base'
+                    size='lg'
+                    onClick={handleCheckout}
+                  >
                     Finalizar Compra
                   </Button>
                 )}
