@@ -1,6 +1,6 @@
 import { client } from '@/sanity/lib/client';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { AddToCartButton } from '@/components/AddToCartButton';
 import Image from 'next/image';
 
 // 1. Tipagem correta para o TypeScript não reclamar
@@ -62,7 +62,14 @@ export default async function Home() {
 
             {/* Botão de Compra */}
             <CardFooter className='p-4 pt-0'>
-              <Button className='w-full'>Adicionar ao Carrinho</Button>
+              <AddToCartButton
+                product={{
+                  _id: product._id,
+                  title: product.title,
+                  price: product.price,
+                  imageUrl: product.imageUrl,
+                }}
+              />
             </CardFooter>
           </Card>
         ))}
