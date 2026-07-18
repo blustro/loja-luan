@@ -2,6 +2,7 @@ import { client } from '@/sanity/lib/client';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import Image from 'next/image';
+import Link from 'next/link';
 
 // 1. Configuração de ISR (Incremental Static Regeneration)
 export const revalidate = 60;
@@ -38,43 +39,53 @@ export default async function Home() {
 
       <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
         {products.map((product) => (
-          <Card key={product._id} className='flex flex-col overflow-hidden'>
-            {/* Imagem do Produto */}
-            {product.imageUrl && (
-              <div className='h-48 overflow-hidden bg-muted'>
-                <Image
-                  src={product.imageUrl}
-                  alt={product.title}
-                  width={400}
-                  height={300}
-                  className='object-cover transition-transform hover:scale-105'
+          // 1. Adicionamos 'flex flex-col' no Link para ele esticar na célula da grid
+          <Link
+            key={product._id}
+            href={`/product/${product.slug}`}
+            className='flex flex-col'
+          >
+            {/* 2. Adicionamos 'h-full' para o Card preencher o Link */}
+            <Card className='flex flex-col h-full overflow-hidden'>
+              {/* Imagem do Produto */}
+              {product.imageUrl && (
+                <div className='h-48 overflow-hidden bg-muted'>
+                  <Image
+                    src={product.imageUrl}
+                    alt={product.title}
+                    width={400}
+                    height={300}
+                    className='w-full h-full object-cover transition-transform hover:scale-105'
+                  />
+                </div>
+              )}
+
+              {/* Informações */}
+              <CardContent className='flex flex-col grow p-4'>
+                <p className='text-xs text-muted-foreground mb-1 uppercase tracking-wider'>
+                  {product.categoryName || 'Sem Categoria'}
+                </p>
+                <h2 className='text-lg font-semibold mb-2'>{product.title}</h2>
+
+                {/* O mt-auto aqui empurra o preço para baixo se houver espaço livre */}
+                <p className='text-xl font-bold mt-auto'>
+                  R$ {product.price.toFixed(2)}
+                </p>
+              </CardContent>
+
+              {/* Botão de Compra */}
+              <CardFooter className='p-0 mt-auto'>
+                <AddToCartButton
+                  product={{
+                    _id: product._id,
+                    title: product.title,
+                    price: product.price,
+                    imageUrl: product.imageUrl,
+                  }}
                 />
-              </div>
-            )}
-
-            {/* Informações */}
-            <CardContent className='flex flex-col grow p-4'>
-              <p className='text-xs text-muted-foreground mb-1 uppercase tracking-wider'>
-                {product.categoryName || 'Sem Categoria'}
-              </p>
-              <h2 className='text-lg font-semibold mb-2'>{product.title}</h2>
-              <p className='text-xl font-bold mt-auto'>
-                R$ {product.price.toFixed(2)}
-              </p>
-            </CardContent>
-
-            {/* Botão de Compra */}
-            <CardFooter className='p-4 pt-0'>
-              <AddToCartButton
-                product={{
-                  _id: product._id,
-                  title: product.title,
-                  price: product.price,
-                  imageUrl: product.imageUrl,
-                }}
-              />
-            </CardFooter>
-          </Card>
+              </CardFooter>
+            </Card>
+          </Link>
         ))}
       </div>
     </main>

@@ -1,0 +1,56 @@
+// app/product/[slug]/page.tsx
+import { client } from '@/sanity/lib/client';
+import { AddToCartButton } from '@/components/AddToCartButton';
+import Image from 'next/image';
+
+export default async function ProductPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  // Await nos params (padrão do Next.js App Router)
+  const { slug } = await params;
+
+  // Consulta GROQ para buscar um único produto pelo slug
+  const product = await client.fetch(
+    `*[_type == "product" && slug.current == $slug][0]{
+      _id,
+      title,
+      price,
+    "imageUrl": images[0].asset->url,
+      description
+    }`,
+    { slug },
+  );
+
+  if (!product) {
+    return <div className='p-10 text-center'>Produto não encontrado.</div>;
+  }
+
+  return (
+    <div className='container mx-auto max-w-6xl p-6 grid md:grid-cols-2 gap-10'>
+      <div>
+        <Image
+          src={product.imageUrl}
+          alt={product.title}
+          width={600}
+          height={600}
+          className='rounded-lg w-full h-auto object-cover'
+        />
+      </div>
+
+      {/* Detalhes */}
+      <div className='flex flex-col gap-4'>
+        <h1 className='text-4xl font-bold'>{product.title}</h1>
+        <p className='text-2xl font-semibold text-(--primary-color)'>
+          R$ {product.price.toFixed(2)}
+        </p>
+        <p className='text-gray-600'>{product.description}</p>
+
+        <div className='mt-4'>
+          <AddToCartButton product={product} />
+        </div>
+      </div>
+    </div>
+  );
+}

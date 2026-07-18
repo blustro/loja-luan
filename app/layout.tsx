@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google'; // 1. Importação da fonte
+import { Inter } from 'next/font/google';
 import './globals.css';
-import { CartSidebarWrapper } from '@/components/CartSidebarWrapper';
+import Header from '@/components/Header';
+import { client } from '@/sanity/lib/client';
 // 2. Configuração da fonte
 const inter = Inter({ subsets: ['latin'] });
 
@@ -10,25 +11,23 @@ export const metadata: Metadata = {
   description: 'E-commerce rápido e eficiente',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await client.fetch(
+    `*[_type == "settings"][0]{ primaryColor }`,
+  );
+  const primaryColor = settings?.primaryColor?.hex || '#000000';
   return (
     <html lang='pt-BR'>
-      {/* 3. Aplicação da classe 'inter' aqui */}
-      <body className={inter.className}>
-        <header className='border-b'>
-          <div className='container mx-auto max-w-6xl p-4 flex justify-between items-center'>
-            <div className='font-bold text-xl tracking-tight'>
-              Mano do corre
-            </div>
-            <CartSidebarWrapper />
-          </div>
-        </header>
-
-        {children}
+      <body
+        className={inter.className}
+        style={{ '--primary-color': primaryColor } as React.CSSProperties}
+      >
+        <Header />
+        <main className='container mx-auto max-w-6xl p-4'>{children}</main>
       </body>
     </html>
   );

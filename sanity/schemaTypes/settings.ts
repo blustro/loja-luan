@@ -16,5 +16,11 @@ export const settings = defineType({
       type: 'color',
       description: 'Escolha a cor principal para botões e destaques do site',
     }),
+    defineField({
+      name: 'images',
+      title: 'Logo',
+      type: 'array',
+      of: [{ type: 'image', options: { hotspot: true } }],
+    }),
   ],
 });

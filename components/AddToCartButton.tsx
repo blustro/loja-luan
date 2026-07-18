@@ -23,7 +23,11 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
   };
 
   return (
-    <Button className='w-full' onClick={handleAddToCart}>
+    <Button
+      className='w-full bg-(--primary-color) text-black flex justify-center items-center cursor-pointer
+             hover:bg-black hover:text-(--primary-color) transition-all duration-300'
+      onClick={handleAddToCart}
+    >
       <ShoppingCart className='mr-2 h-4 w-4' />
       Adicionar ao Carrinho
     </Button>
