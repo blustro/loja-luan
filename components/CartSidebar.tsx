@@ -13,10 +13,26 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
 import Image from 'next/image';
+import { Elements } from '@stripe/react-stripe-js';
+import stripePromise from '@/lib/stripe-client';
+import { createCheckoutSession } from '@/app/actions/checkout';
+import { CheckoutForm } from './CheckoutForm';
+import { useState } from 'react';
 
 export default function CartSidebar() {
   const { items, increaseQuantity, decreaseQuantity, removeItem } =
     useCartStore();
+
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+
+  const handleCheckout = async () => {
+    const result = await createCheckoutSession(items);
+    if (result.success && result.clientSecret) {
+      setClientSecret(result.clientSecret);
+    } else {
+      alert('Erro ao iniciar checkout');
+    }
+  };
 
   const total = items.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -108,9 +124,15 @@ export default function CartSidebar() {
                   <span>Total</span>
                   <span>R$ {total.toFixed(2)}</span>
                 </div>
-                <Button className='w-full' size='lg'>
-                  Finalizar Compra
-                </Button>
+                {clientSecret ? (
+                  <Elements stripe={stripePromise} options={{ clientSecret }}>
+                    <CheckoutForm />
+                  </Elements>
+                ) : (
+                  <Button className='w-full' size='lg' onClick={handleCheckout}>
+                    Finalizar Compra
+                  </Button>
+                )}
               </div>
             </>
           )}

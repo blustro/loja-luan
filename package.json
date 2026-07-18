@@ -13,6 +13,8 @@
     "@sanity/color-input": "^6.0.16",
     "@sanity/image-url": "^2.1.1",
     "@sanity/vision": "^5.31.1",
+    "@stripe/react-stripe-js": "^6.8.0",
+    "@stripe/stripe-js": "^9.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.25.0",
