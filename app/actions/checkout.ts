@@ -2,37 +2,35 @@
 
 import { stripe } from '@/lib/stripe';
 
-// Definimos o formato da resposta que a função vai enviar
-export type CheckoutResponse = {
-  success: boolean;
-  clientSecret?: string;
-  error?: string;
-};
-
-export async function createCheckoutSession(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  items: any[],
-): Promise<CheckoutResponse> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function createCheckoutSession(items: any[]) {
   try {
-    const amount = Math.round(
-      items.reduce((acc, item) => acc + item.price * item.quantity, 0) * 100,
-    );
+    // Transforma seus itens do carrinho no formato do Stripe
+    const lineItems = items.map((item) => ({
+      price_data: {
+        currency: 'brl',
+        product_data: {
+          name: item.title,
+          images: item.imageUrl ? [item.imageUrl] : [],
+        },
+        unit_amount: Math.round(item.price * 100), // Stripe usa centavos
+      },
+      quantity: item.quantity || 1,
+    }));
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount,
-      currency: 'brl',
-      automatic_payment_methods: { enabled: true },
+    // Cria a sessão de checkout
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'], // Adicione outros se desejar
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cart`,
     });
 
-    return {
-      success: true,
-      clientSecret: paymentIntent.client_secret || '',
-    };
+    // Retorna a URL da sessão para o frontend
+    return { url: session.url };
   } catch (error) {
     console.error('Erro ao criar sessão Stripe:', error);
-    return {
-      success: false,
-      error: 'Falha ao iniciar pagamento',
-    };
+    return { error: 'Falha ao iniciar pagamento' };
   }
 }
