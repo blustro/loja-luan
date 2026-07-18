@@ -3,7 +3,10 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import Image from 'next/image';
 
-// 1. Tipagem correta para o TypeScript não reclamar
+// 1. Configuração de ISR (Incremental Static Regeneration)
+export const revalidate = 60;
+
+// 2. Tipagem
 interface Product {
   _id: string;
   title: string;
@@ -13,7 +16,7 @@ interface Product {
   categoryName: string;
 }
 
-// 2. Query do Sanity
+// 3. Query do Sanity
 const GET_PRODUCTS_QUERY = `
   *[_type == "product"] {
     _id,
@@ -26,7 +29,7 @@ const GET_PRODUCTS_QUERY = `
 `;
 
 export default async function Home() {
-  // 3. Fazendo a busca e aplicando a tipagem
+  // 4. Busca os dados
   const products: Product[] = await client.fetch(GET_PRODUCTS_QUERY);
 
   return (
@@ -49,7 +52,7 @@ export default async function Home() {
               </div>
             )}
 
-            {/* Informações: Título, Categoria e Preço */}
+            {/* Informações */}
             <CardContent className='flex flex-col grow p-4'>
               <p className='text-xs text-muted-foreground mb-1 uppercase tracking-wider'>
                 {product.categoryName || 'Sem Categoria'}
