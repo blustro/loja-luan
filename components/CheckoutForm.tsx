@@ -15,7 +15,12 @@ export function CheckoutForm() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!stripe || !elements) return;
+    console.log('Form submetido!'); // Se isso aparecer, o form está ok
+
+    if (!stripe || !elements) {
+      console.log('Stripe ou Elements não estão prontos');
+      return;
+    }
 
     setLoading(true);
 
@@ -26,14 +31,27 @@ export function CheckoutForm() {
       },
     });
 
-    if (error) alert(error.message);
+    if (error) {
+      console.error('Erro no Stripe:', error);
+      alert(error.message);
+    }
     setLoading(false);
   };
 
   return (
     <form onSubmit={handleSubmit} className='space-y-4'>
       <PaymentElement />
-      <Button disabled={!stripe || loading} className='w-full'>
+
+      {/* 
+        1. Adicionamos type="submit" para garantir que o navegador entenda a função.
+        2. Adicionamos um onClick de teste para ver se o clique acontece.
+      */}
+      <Button
+        type='submit'
+        disabled={!stripe || loading}
+        className='w-full'
+        onClick={() => console.log('Botão clicado!')}
+      >
         {loading ? 'Processando...' : 'Pagar Agora'}
       </Button>
     </form>

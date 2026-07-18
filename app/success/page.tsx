@@ -24,10 +24,9 @@ export default function SuccessPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button
-            className='w-full mt-4'
-            render={<Link href='/'>Voltar para a loja</Link>}
-          ></Button>
+          <Button className='w-full mt-4' asChild>
+            <Link href='/'>Voltar para a loja</Link>
+          </Button>
         </CardContent>
       </Card>
     </div>

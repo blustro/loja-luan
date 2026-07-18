@@ -26,11 +26,14 @@ export default function CartSidebar() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   const handleCheckout = async () => {
+    // O TypeScript agora sabe que 'result' segue o modelo CheckoutResponse
     const result = await createCheckoutSession(items);
+
     if (result.success && result.clientSecret) {
       setClientSecret(result.clientSecret);
     } else {
-      alert('Erro ao iniciar checkout');
+      // Aqui você pode tratar o erro, por exemplo:
+      alert(result.error || 'Erro desconhecido');
     }
   };
 
