@@ -10,7 +10,8 @@ export const productFields = groq`
     price,
     stripePriceId,
     sku,
-    title
+    title,
+    stock
   },
   "imageUrl": coalesce(image.asset->url, images[0].asset->url),
   "categoryName": category->title

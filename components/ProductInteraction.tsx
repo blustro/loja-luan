@@ -10,20 +10,22 @@ interface ProductInteractionProps {
 }
 
 export function ProductInteraction({ product }: ProductInteractionProps) {
-  // 1. Diga explicitamente que o estado pode ser Variant ou null
-  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  // 1. Inicialize com a primeira variante se ela existir, caso contrário null
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(
+    product.variants?.[0] || null,
+  );
+
+  const [quantity, setQuantity] = useState(1);
 
   return (
     <div className='flex flex-col gap-4'>
       <p className='text-2xl font-semibold text-primary'>
-        {/* Agora o TypeScript entende que selectedVariant pode ser Variant */}
         R${' '}
         {selectedVariant
           ? selectedVariant.price.toFixed(2)
           : product.price.toFixed(2)}
       </p>
 
-      {/* 2. Envolva em uma função anônima para resolver o erro de incompatibilidade */}
       <VariantSelector
         variants={product.variants || []}
         onSelect={(variant) => setSelectedVariant(variant)}
@@ -32,7 +34,14 @@ export function ProductInteraction({ product }: ProductInteractionProps) {
       <AddToCartButton
         product={product}
         variant={selectedVariant}
-        disabled={!selectedVariant}
+        // Agora o botão estará ativo se houver uma variante selecionada
+        // OU se o produto não tiver variantes (o que é improvável, mas trata o erro)
+        disabled={
+          product.variants && product.variants.length > 0
+            ? !selectedVariant
+            : false
+        }
+        quantity={quantity}
       />
     </div>
   );

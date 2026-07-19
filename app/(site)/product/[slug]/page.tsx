@@ -1,8 +1,8 @@
 import { client } from '@/sanity/lib/client';
-import { AddToCartButton } from '@/components/AddToCartButton';
 import Image from 'next/image';
 import { Product } from '@/app/types/sanity';
 import { productBySlugQuery } from '@/sanity/lib/queries';
+import { ProductInteraction } from '@/components/ProductInteraction';
 
 export default async function ProductPage({
   params,
@@ -42,9 +42,7 @@ export default async function ProductPage({
         </p>
         <p className='text-gray-600'>{product.description}</p>
 
-        <div className='mt-4'>
-          <AddToCartButton product={product} />
-        </div>
+        <ProductInteraction product={product} />
       </div>
     </div>
   );

@@ -14,7 +14,7 @@ export interface CartItem {
 // 2. Tipagem das funções que o carrinho terá
 interface CartState {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  addItem: (item: Omit<CartItem, 'quantity'>, quantity: number) => void;
   removeItem: (id: string) => void;
   increaseQuantity: (id: string) => void;
   decreaseQuantity: (id: string) => void;
@@ -28,7 +28,7 @@ export const useCartStore = create<CartState>()(
       items: [],
 
       // Adiciona um item ou soma +1 se já existir
-      addItem: (product) =>
+      addItem: (product, quantity = 1) =>
         set((state) => {
           const existingItem = state.items.find(
             (item) => item._id === product._id,
@@ -37,12 +37,12 @@ export const useCartStore = create<CartState>()(
             return {
               items: state.items.map((item) =>
                 item._id === product._id
-                  ? { ...item, quantity: item.quantity + 1 }
+                  ? { ...item, quantity: item.quantity + quantity }
                   : item,
               ),
             };
           }
-          return { items: [...state.items, { ...product, quantity: 1 }] };
+          return { items: [...state.items, { ...product, quantity }] };
         }),
 
       // Remove o item completamente

@@ -9,13 +9,15 @@ import { ShoppingCart } from 'lucide-react'; // Ícone nativo que já vem com sh
 
 interface AddToCartButtonProps {
   product: Product;
-  variant?: Variant | null; // Adicione esta linha
+  variant?: Variant | null;
+  quantity: number;
   disabled?: boolean;
 }
 
 export function AddToCartButton({
   product,
   variant,
+  quantity,
   disabled,
 }: AddToCartButtonProps) {
   // Agora você pode usar 'variant' aqui dentro para acessar o preço correto
@@ -36,14 +38,16 @@ export function AddToCartButton({
       return;
     }
 
-    const itemToAdd = {
-      _id: `${product._id}-${selectedVariant.title}`,
-      title: `${product.title} (${selectedVariant.title})`,
-      price: selectedVariant.price,
-      imageUrl: product.imageUrl,
-    };
+    addItem(
+      {
+        _id: `${product._id}-${selectedVariant.title}`,
+        title: `${product.title} (${selectedVariant.title})`,
+        price: selectedVariant.price,
+        imageUrl: product.imageUrl,
+      },
+      quantity,
+    ); // Passamos a quantidade aqui!
 
-    addItem(itemToAdd);
     alert(`${product.title} adicionado ao carrinho!`); // Um aviso simples por enquanto
   };
 
