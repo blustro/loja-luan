@@ -5,8 +5,13 @@ import { groq } from 'next-sanity';
 export const productFields = groq`
   _id,
   title,
-  price,
   slug,
+  variants[] {
+    price,
+    stripePriceId,
+    sku,
+    title
+  },
   "imageUrl": coalesce(image.asset->url, images[0].asset->url),
   "categoryName": category->title
 `;

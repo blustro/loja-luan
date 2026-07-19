@@ -5,7 +5,7 @@ import { CategoryFilter } from '@/components/CategoryFilter'; // 1. Adicione a i
 import Image from 'next/image';
 import Link from 'next/link';
 import { globalDataQuery, allProductsQuery } from '@/sanity/lib/queries';
-import { Product, Category, Settings } from './types/sanity';
+import { Product, Category, Settings } from '../types/sanity';
 
 export const revalidate = 60;
 
@@ -39,53 +39,59 @@ export default async function Home({
       />
 
       <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
-        {products.map((product) => (
-          <Link
-            key={product._id}
-            href={`/product/${product.slug.current}`}
-            className='flex flex-col'
-          >
-            <Card className='flex flex-col h-full overflow-hidden'>
-              {/* Imagem do Produto */}
-              {product.imageUrl && (
-                <div className='relative w-full h-48 overflow-hidden bg-muted'>
-                  <Image
-                    src={product.imageUrl}
-                    alt={product.title}
-                    fill
-                    sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw'
-                    className='object-cover transition-transform hover:scale-105'
+        {products.map((product) => {
+          const price = product.variants?.[0]?.price || 0;
+
+          return (
+            <Link
+              key={product._id}
+              href={`/product/${product.slug.current}`}
+              className='flex flex-col'
+            >
+              <Card className='flex flex-col h-full overflow-hidden'>
+                {/* Imagem do Produto */}
+                {product.imageUrl && (
+                  <div className='relative w-full h-48 overflow-hidden bg-muted'>
+                    <Image
+                      src={product.imageUrl}
+                      alt={product.title}
+                      fill
+                      sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw'
+                      className='object-cover transition-transform hover:scale-105'
+                    />
+                  </div>
+                )}
+
+                {/* Informações */}
+                <CardContent className='flex flex-col grow p-4'>
+                  <p className='text-xs text-muted-foreground mb-1 uppercase tracking-wider'>
+                    {product.categoryName || 'Sem Categoria'}
+                  </p>
+                  <h2 className='text-lg font-semibold mb-2'>
+                    {product.title}
+                  </h2>
+
+                  <p className='text-xl font-bold mt-auto'>
+                    R$ {price.toFixed(2)}
+                  </p>
+                </CardContent>
+
+                {/* Botão de Compra */}
+                <CardFooter className='p-0 mt-auto'>
+                  <AddToCartButton
+                    product={{
+                      _id: product._id,
+                      title: product.title,
+                      price: product.price,
+                      imageUrl: product.imageUrl,
+                      slug: product.slug,
+                    }}
                   />
-                </div>
-              )}
-
-              {/* Informações */}
-              <CardContent className='flex flex-col grow p-4'>
-                <p className='text-xs text-muted-foreground mb-1 uppercase tracking-wider'>
-                  {product.categoryName || 'Sem Categoria'}
-                </p>
-                <h2 className='text-lg font-semibold mb-2'>{product.title}</h2>
-
-                <p className='text-xl font-bold mt-auto'>
-                  R$ {product.price.toFixed(2)}
-                </p>
-              </CardContent>
-
-              {/* Botão de Compra */}
-              <CardFooter className='p-0 mt-auto'>
-                <AddToCartButton
-                  product={{
-                    _id: product._id,
-                    title: product.title,
-                    price: product.price,
-                    imageUrl: product.imageUrl,
-                    slug: product.slug,
-                  }}
-                />
-              </CardFooter>
-            </Card>
-          </Link>
-        ))}
+                </CardFooter>
+              </Card>
+            </Link>
+          );
+        })}
 
         {/* Mensagem caso não encontre produtos */}
         {products.length === 0 && (

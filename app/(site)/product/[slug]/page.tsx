@@ -20,6 +20,8 @@ export default async function ProductPage({
     return <div className='p-10 text-center'>Produto não encontrado.</div>;
   }
 
+  const price = product.variants?.[0]?.price || 0;
+
   return (
     <div className='container mx-auto max-w-6xl p-6 grid md:grid-cols-2 gap-10'>
       <div>
@@ -36,7 +38,7 @@ export default async function ProductPage({
       <div className='flex flex-col gap-4'>
         <h1 className='text-4xl font-bold'>{product.title}</h1>
         <p className='text-2xl font-semibold text-primary'>
-          R$ {product.price.toFixed(2)}
+          R$ {price.toFixed(2)}
         </p>
         <p className='text-gray-600'>{product.description}</p>
 
