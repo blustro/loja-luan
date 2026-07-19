@@ -1,4 +1,3 @@
-// app/product/[slug]/page.tsx
 import { client } from '@/sanity/lib/client';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import Image from 'next/image';

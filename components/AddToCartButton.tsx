@@ -1,5 +1,6 @@
 'use client'; // <-- Isso avisa ao Next.js que este componente roda no navegador
 
+import { Product, Variant } from '@/app/types/sanity';
 import { Button } from '@/components/ui/button';
 import { checkoutButtonStyle } from '@/lib/styles';
 import { cn } from '@/lib/utils';
@@ -7,15 +8,19 @@ import { useCartStore } from '@/store/useCartStore';
 import { ShoppingCart } from 'lucide-react'; // Ícone nativo que já vem com shadcn
 
 interface AddToCartButtonProps {
-  product: {
-    _id: string;
-    title: string;
-    price: number;
-    imageUrl: string;
-  };
+  product: Product;
+  variant?: Variant | null; // Adicione esta linha
+  disabled?: boolean;
 }
 
-export function AddToCartButton({ product }: AddToCartButtonProps) {
+export function AddToCartButton({
+  product,
+  variant,
+  disabled,
+}: AddToCartButtonProps) {
+  // Agora você pode usar 'variant' aqui dentro para acessar o preço correto
+  // e enviar para o Stripe/Carrinho
+
   // Puxamos a função de adicionar do nosso Zustand
   const addItem = useCartStore((state) => state.addItem);
 
@@ -33,6 +38,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
         'w-full flex justify-center items-center font-bold',
       )}
       onClick={handleAddToCart}
+      disabled={disabled}
     >
       <ShoppingCart className='mr-2 h-4 w-4' />
       Adicionar ao Carrinho

@@ -1,3 +1,11 @@
+export interface Variant {
+  title: string;
+  sku: string;
+  price: number;
+  stock: number;
+  stripePriceId: string;
+}
+
 export interface Product {
   _id: string;
   title: string;
@@ -6,6 +14,7 @@ export interface Product {
   imageUrl: string;
   categoryName?: string;
   description?: string;
+  variants: Variant[];
 }
 
 export interface Category {

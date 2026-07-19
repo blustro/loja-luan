@@ -31,7 +31,19 @@ export const productBySlugQuery = groq`*[_type == "product" && slug.current == $
   title,
   price,
   "imageUrl": images[0].asset->url,
-  description
+  description,
+  // Novos campos adicionados aqui:
+  variants[] {
+    title,
+    price,
+    sku,
+    stripePriceId,
+    stock
+  },
+  details {
+    material,
+    careInstructions
+  }
 }`;
 
 export const globalDataQuery = groq`{
