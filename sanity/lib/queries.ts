@@ -7,6 +7,7 @@ export const productFields = groq`
   title,
   slug,
   variants[] {
+    _key,
     price,
     stripePriceId,
     sku,
@@ -40,6 +41,7 @@ export const productBySlugQuery = groq`*[_type == "product" && slug.current == $
   description,
   // Novos campos adicionados aqui:
   variants[] {
+    _key,
     title,
     price,
     sku,

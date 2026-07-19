@@ -20,14 +20,12 @@ export function ProductInteraction({ product }: ProductInteractionProps) {
   return (
     <div className='flex flex-col gap-4'>
       <p className='text-2xl font-semibold text-primary'>
-        R${' '}
-        {selectedVariant
-          ? selectedVariant.price.toFixed(2)
-          : product.price.toFixed(2)}
+        R$ {(selectedVariant?.price || product.price).toFixed(2)}
       </p>
 
       <VariantSelector
         variants={product.variants || []}
+        selectedVariant={selectedVariant}
         onSelect={(variant) => setSelectedVariant(variant)}
       />
 

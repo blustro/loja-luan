@@ -1,4 +1,5 @@
 export interface Variant {
+  _key: string;
   title: string;
   sku: string;
   price: number;
