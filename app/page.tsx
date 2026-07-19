@@ -4,59 +4,27 @@ import { AddToCartButton } from '@/components/AddToCartButton';
 import { CategoryFilter } from '@/components/CategoryFilter'; // 1. Adicione a importação
 import Image from 'next/image';
 import Link from 'next/link';
+import { globalDataQuery, allProductsQuery } from '@/sanity/lib/queries';
+import { Product, Category, Settings } from './types/sanity';
 
 export const revalidate = 60;
-
-interface Product {
-  _id: string;
-  title: string;
-  price: number;
-  slug: { current: string };
-  imageUrl: string;
-  categoryName: string;
-}
-
-// Interface para as categorias do Sanity
-interface Category {
-  _id: string;
-  title: string;
-  slug: string;
-}
 
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { query?: string; category?: string };
+  searchParams: Promise<{ query?: string; category?: string }>;
 }) {
   const { query, category } = await searchParams;
 
-  const filter = [
-    `_type == 'product'`,
-    query ? `title match '${query}*'` : '',
-    category ? `category->slug.current == '${category}'` : '',
-  ]
-    .filter(Boolean)
-    .join(' && ');
-
-  // 2. Busca Produtos e Categorias em Paralelo
-  const [products, categories] = await Promise.all([
-    client.fetch<Product[]>(
-      `*[_type == 'product' && ${filter || 'true'}] {
-        _id,
-        title,
-        price,
-        slug,
-        "imageUrl": coalesce(image.asset->url, images[0].asset->url),
-        "categoryName": category->title
-      }`,
+  // Chamada única para dados globais e produtos
+  const [data, products] = await Promise.all([
+    client.fetch<{ settings: Settings; categories: Category[] }>(
+      globalDataQuery,
     ),
-    client.fetch<Category[]>(
-      `*[_type == 'category'] | order(title asc) {
-        _id,
-        title,
-        "slug": slug.current
-      }`,
-    ),
+    client.fetch<Product[]>(allProductsQuery, {
+      category: category ?? null,
+      search: query ?? null,
+    }),
   ]);
 
   return (
@@ -65,7 +33,7 @@ export default async function Home({
 
       {/* 3. Renderiza o Componente de Filtro */}
       <CategoryFilter
-        categories={categories}
+        categories={data.categories}
         currentCategory={category}
         currentQuery={query}
       />

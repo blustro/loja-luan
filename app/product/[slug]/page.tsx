@@ -2,26 +2,20 @@
 import { client } from '@/sanity/lib/client';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import Image from 'next/image';
+import { Product } from '@/app/types/sanity';
+import { productBySlugQuery } from '@/sanity/lib/queries';
 
 export default async function ProductPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
   // Await nos params (padrão do Next.js App Router)
   const { slug } = await params;
 
-  // Consulta GROQ para buscar um único produto pelo slug
-  const product = await client.fetch(
-    `*[_type == "product" && slug.current == $slug][0]{
-      _id,
-      title,
-      price,
-    "imageUrl": images[0].asset->url,
-      description
-    }`,
-    { slug },
-  );
+  const product = await client.fetch<Product>(productBySlugQuery, {
+    slug: slug,
+  });
 
   if (!product) {
     return <div className='p-10 text-center'>Produto não encontrado.</div>;
