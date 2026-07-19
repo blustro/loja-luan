@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 export function CartSummary() {
   const { items } = useCartStore();
   const total = items.reduce(
-    (acc, item) => acc + item.price * item.quantity,
+    (acc, item) => acc + (item.price ?? 0) * item.quantity,
     0,
   );
 

@@ -27,7 +27,23 @@ export function AddToCartButton({
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem(product);
+
+    // Lógica inteligente: usa a variante passada ou a primeira do array
+    const selectedVariant = variant ?? product.variants?.[0];
+
+    if (!selectedVariant) {
+      alert('Erro: Este produto não possui preço configurado.');
+      return;
+    }
+
+    const itemToAdd = {
+      _id: `${product._id}-${selectedVariant.title}`,
+      title: `${product.title} (${selectedVariant.title})`,
+      price: selectedVariant.price,
+      imageUrl: product.imageUrl,
+    };
+
+    addItem(itemToAdd);
     alert(`${product.title} adicionado ao carrinho!`); // Um aviso simples por enquanto
   };
 

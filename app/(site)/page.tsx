@@ -85,6 +85,7 @@ export default async function Home({
                       price: product.price,
                       imageUrl: product.imageUrl,
                       slug: product.slug,
+                      variants: product.variants,
                     }}
                   />
                 </CardFooter>

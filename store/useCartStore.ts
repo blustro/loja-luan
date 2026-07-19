@@ -3,11 +3,12 @@ import { persist } from 'zustand/middleware';
 
 // 1. Tipagem do item que vai para o carrinho
 export interface CartItem {
-  _id: string;
+  _id: string; // ID do produto ou da variante
   title: string;
   price: number;
   imageUrl: string;
-  quantity: number; // A quantidade do mesmo item
+  quantity: number;
+  variantName?: string; // Opcional, para exibição
 }
 
 // 2. Tipagem das funções que o carrinho terá
