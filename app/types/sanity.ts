@@ -14,7 +14,7 @@ export interface Product {
   imageUrl: string;
   categoryName?: string;
   description?: string;
-  variants: Variant[];
+  variants?: Variant[];
 }
 
 export interface Category {

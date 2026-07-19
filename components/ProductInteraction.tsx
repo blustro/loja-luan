@@ -25,7 +25,7 @@ export function ProductInteraction({ product }: ProductInteractionProps) {
 
       {/* 2. Envolva em uma função anônima para resolver o erro de incompatibilidade */}
       <VariantSelector
-        variants={product.variants}
+        variants={product.variants || []}
         onSelect={(variant) => setSelectedVariant(variant)}
       />
 
