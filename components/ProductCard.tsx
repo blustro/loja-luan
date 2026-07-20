@@ -45,52 +45,58 @@ export function ProductCard({ product }: { product: Product }) {
         </p>
         <h2 className='text-lg font-semibold mb-2'>{product.title}</h2>
 
-        {/* Select de Tamanho/Variante */}
-        <div className='space-y-1'>
-          <Label className='text-xs font-bold text-muted-foreground'>
-            TAMANHO
-          </Label>
-          <Select
-            key={selectedVariant?.title}
-            onValueChange={(val) =>
-              setSelectedVariant(product.variants?.find((v) => v.title === val))
-            }
-            defaultValue={product.variants?.[0]?.title}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {product.variants?.map((v) => (
-                <SelectItem key={v.title} value={v.title}>
-                  {v.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <div className='flex justify-between'>
+          {/* Select de Tamanho/Variante */}
+          <div className='space-y-1'>
+            <Label className='text-xs font-bold text-muted-foreground'>
+              TAMANHO
+            </Label>
+            <Select
+              key={selectedVariant?.title}
+              onValueChange={(val) =>
+                setSelectedVariant(
+                  product.variants?.find((v) => v.title === val),
+                )
+              }
+              defaultValue={product.variants?.[0]?.title}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {product.variants?.map((v) => (
+                  <SelectItem key={v.title} value={v.title}>
+                    {v.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        {/* Select de Quantidade baseado no Stock */}
-        <div className='space-y-1'>
-          <Label className='text-xs font-bold text-muted-foreground'>QTD</Label>
-          <Select
-            value={quantity.toString()}
-            onValueChange={(val) => setQuantity(Number(val))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from(
-                { length: selectedVariant?.stock ?? 1 },
-                (_, i) => i + 1,
-              ).map((num) => (
-                <SelectItem key={num} value={num.toString()}>
-                  {num}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Select de Quantidade baseado no Stock */}
+          <div className='space-y-1'>
+            <Label className='text-xs font-bold text-muted-foreground'>
+              QTD
+            </Label>
+            <Select
+              value={quantity.toString()}
+              onValueChange={(val) => setQuantity(Number(val))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from(
+                  { length: selectedVariant?.stock ?? 1 },
+                  (_, i) => i + 1,
+                ).map((num) => (
+                  <SelectItem key={num} value={num.toString()}>
+                    {num}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <p className='text-xl font-bold mt-auto'>
