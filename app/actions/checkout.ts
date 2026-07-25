@@ -3,8 +3,11 @@
 import { stripe } from '@/lib/stripe';
 
 interface CheckoutItem {
-  id?: string; // ID do documento do produto no Sanity
+  id?: string;
+  _id?: string;
   name?: string;
+  title?: string;
+  imageUrl?: string;
   price?: number;
   quantity: number;
   variant?: {
@@ -33,20 +36,26 @@ export async function createCheckoutSession(payload: CheckoutPayload) {
     const { items, shippingCost, address } = payload;
 
     // Mapeia os itens do carrinho para o formato do Stripe
-    const lineItems = items.map((item) => ({
-      price_data: {
-        currency: 'brl',
-        product_data: {
-          name: item.name || 'Produto',
-          metadata: {
-            productId: item.id || '', // ID do Sanity associado ao produto
-            variantKey: item.variant?._key || '',
+    const lineItems = items.map((item) => {
+      const productName = item.title || item.name || 'Produto';
+      const productImage = item.imageUrl ? [item.imageUrl] : [];
+
+      return {
+        price_data: {
+          currency: 'brl',
+          product_data: {
+            name: productName,
+            images: productImage,
+            metadata: {
+              productId: item.id || item._id || '',
+              variantKey: item.variant?._key || '',
+            },
           },
+          unit_amount: Math.round((item.price || 0) * 100),
         },
-        unit_amount: Math.round((item.price || 0) * 100), // Stripe trabalha em centavos
-      },
-      quantity: item.quantity,
-    }));
+        quantity: item.quantity,
+      };
+    });
 
     // Se houver custo de frete maior que zero, adiciona como item na sessão
     if (shippingCost > 0) {
@@ -55,9 +64,10 @@ export async function createCheckoutSession(payload: CheckoutPayload) {
           currency: 'brl',
           product_data: {
             name: `${payload.shippingName || 'Frete'} (${address?.cidade || ''}/${address?.uf || ''})`,
+            images: [], // 💡 Adicionado array vazio para satisfazer a tipagem obrigatória do Stripe/TypeScript
             metadata: {
-              productId: '', // Necessário para satisfazer a tipagem inferida
-              variantKey: 'shipping', // Identificador usado no webhook para filtrar o frete
+              productId: '',
+              variantKey: 'shipping',
             },
           },
           unit_amount: Math.round(shippingCost * 100),
@@ -80,6 +90,8 @@ export async function createCheckoutSession(payload: CheckoutPayload) {
         uf: address?.uf || '',
         numero: address?.numero || '',
         complemento: address?.complemento || '',
+        shippingName: payload.shippingName,
+        shippingCost: String(payload.shippingCost),
       },
     });
 

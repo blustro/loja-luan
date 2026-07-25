@@ -145,7 +145,7 @@ export function CartSummary() {
 
           {address && (
             <div className='space-y-3 bg-muted/40 p-3 rounded-md overflow-hidden'>
-              <div className='text-xs text-muted-foreground break-words'>
+              <div className='text-xs text-muted-foreground wrap-break-word'>
                 📍 {address.logradouro}, {address.bairro} - {address.cidade}/
                 {address.uf}
               </div>
