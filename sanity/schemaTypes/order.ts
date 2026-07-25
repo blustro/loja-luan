@@ -33,13 +33,14 @@ export const order = {
       ],
     },
     {
-      name: 'shippingOption',
-      title: 'Opção de Frete',
-      type: 'object',
-      fields: [
-        { name: 'name', title: 'Modalidade', type: 'string' },
-        { name: 'cost', title: 'Custo', type: 'number' },
-      ],
+      name: 'shippingName',
+      title: 'Método de Envio (ex: PAC / SEDEX)',
+      type: 'string',
+    },
+    {
+      name: 'shippingCost',
+      title: 'Custo do Frete',
+      type: 'number',
     },
     {
       name: 'items',

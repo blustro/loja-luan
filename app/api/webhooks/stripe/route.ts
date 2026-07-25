@@ -91,11 +91,16 @@ export async function POST(req: Request) {
         customerEmail: customerEmail || '',
         shippingAddress: addressData,
         shippingOption: {
-          name: shippingItem?.description || 'Frete',
+          name:
+            shippingItem?.description ||
+            session.metadata?.shippingName ||
+            'Frete',
           cost:
             shippingItem && shippingItem.amount_total
               ? shippingItem.amount_total / 100
-              : 0,
+              : session.metadata?.shippingCost
+                ? Number(session.metadata.shippingCost)
+                : 0,
         },
         items: products.map((p) => {
           const productMetadata = (p.price?.product as Stripe.Product)

@@ -23,15 +23,20 @@ export async function POST(request: Request) {
       );
     }
 
-    // Exemplo de regra simples de frete baseada na região (UF)
-    let shippingPrice = 25.0; // Padrão nacional
+    // Regras de cálculo base para o PAC
+    let pacPrice = 15.0;
     if (addressData.uf === 'SP') {
-      shippingPrice = 15.0; // Frete mais barato para o estado de São Paulo
+      pacPrice = 12.0;
     } else if (
       ['AM', 'RR', 'AP', 'AC', 'RO', 'PA', 'MA'].includes(addressData.uf)
     ) {
-      shippingPrice = 45.0; // Frete para regiões mais distantes
+      pacPrice = 38.0;
+    } else {
+      pacPrice = 22.0;
     }
+
+    // Sedex é mais rápido e possui um acréscimo no valor
+    const sedexPrice = pacPrice + 16.0;
 
     return NextResponse.json({
       success: true,
@@ -44,10 +49,16 @@ export async function POST(request: Request) {
       },
       options: [
         {
-          id: 'standard',
-          name: `Entrega Padrão (${addressData.localidade} - ${addressData.uf})`,
-          price: shippingPrice,
+          id: 'pac',
+          name: 'Correios PAC',
+          price: pacPrice,
           deadline: '5 a 8 dias úteis',
+        },
+        {
+          id: 'sedex',
+          name: 'Correios SEDEX',
+          price: sedexPrice,
+          deadline: '2 a 3 dias úteis',
         },
       ],
     });
