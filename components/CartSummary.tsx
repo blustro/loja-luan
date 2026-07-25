@@ -45,7 +45,7 @@ export function CartSummary() {
     0,
   );
 
-  const shippingPrice = selectedShipping ? selectedShipping.price : 0;
+  const shippingPrice = selectedShipping ? (selectedShipping.price ?? 0) : 0;
   const total = subtotal + shippingPrice;
 
   const handleCalculateShipping = async (e: React.FormEvent) => {
@@ -209,7 +209,7 @@ export function CartSummary() {
                       </Label>
                     </div>
                     <span className='text-xs font-semibold text-foreground shrink-0 pl-1'>
-                      R$ {opt.price.toFixed(2)}
+                      R$ {(opt.price ?? 0).toFixed(2)}{' '}
                     </span>
                   </div>
                 ))}
