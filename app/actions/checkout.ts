@@ -2,9 +2,8 @@
 
 import { stripe } from '@/lib/stripe';
 
-// Defina a interface para o payload de checkout
 interface CheckoutItem {
-  id?: string;
+  id?: string; // ID do documento do produto no Sanity
   name?: string;
   price?: number;
   quantity: number;
@@ -40,6 +39,7 @@ export async function createCheckoutSession(payload: CheckoutPayload) {
         product_data: {
           name: item.name || 'Produto',
           metadata: {
+            productId: item.id || '', // ID do Sanity associado ao produto
             variantKey: item.variant?._key || '',
           },
         },
@@ -48,7 +48,7 @@ export async function createCheckoutSession(payload: CheckoutPayload) {
       quantity: item.quantity,
     }));
 
-    // Se houver custo de frete maior que zero, podemos adicioná-lo como um item na sessão ou via shipping_options
+    // Se houver custo de frete maior que zero, adiciona como item na sessão
     if (shippingCost > 0) {
       lineItems.push({
         price_data: {
@@ -56,7 +56,8 @@ export async function createCheckoutSession(payload: CheckoutPayload) {
           product_data: {
             name: `${payload.shippingName || 'Frete'} (${address?.cidade || ''}/${address?.uf || ''})`,
             metadata: {
-              variantKey: 'shipping',
+              productId: '', // Necessário para satisfazer a tipagem inferida
+              variantKey: 'shipping', // Identificador usado no webhook para filtrar o frete
             },
           },
           unit_amount: Math.round(shippingCost * 100),
@@ -69,12 +70,16 @@ export async function createCheckoutSession(payload: CheckoutPayload) {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/success?session_id={CHECKOUT_SESSION_KEY}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cart`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cart`,
       metadata: {
         cep: address?.cep || '',
+        logradouro: address?.logradouro || '',
+        bairro: address?.bairro || '',
         cidade: address?.cidade || '',
         uf: address?.uf || '',
+        numero: address?.numero || '',
+        complemento: address?.complemento || '',
       },
     });
 

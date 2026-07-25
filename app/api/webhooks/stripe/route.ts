@@ -106,6 +106,35 @@ export async function POST(req: Request) {
       const createdOrder = await writeClient.create(orderDoc as any);
       console.log('Pedido salvo com sucesso no Sanity ID:', createdOrder._id);
 
+      // --- 2. DAR BAIXA NO ESTOQUE DAS VARIANTES NO SANITY ---
+      for (const item of products) {
+        const productMetadata = (item.price?.product as Stripe.Product)
+          ?.metadata;
+        const productId = productMetadata?.productId;
+        const variantKey = productMetadata?.variantKey;
+        const qtyBought = item.quantity || 1;
+
+        if (productId && variantKey) {
+          try {
+            // Atualiza o estoque usando a propriedade computada correta com colchetes []
+            await writeClient
+              .patch(productId)
+              .dec({ [`variants[_key=="${variantKey}"].stock`]: qtyBought })
+              .commit();
+
+            console.log(
+              `Estoque atualizado: -${qtyBought} para o produto ${productId} (Variante: ${variantKey})`,
+            );
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } catch (stockError: any) {
+            console.error(
+              `Erro ao atualizar estoque do produto ${productId}:`,
+              stockError.message,
+            );
+          }
+        }
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (sanityError: any) {
       console.error('Erro ao salvar pedido no Sanity:', sanityError.message);
