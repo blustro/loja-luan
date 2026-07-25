@@ -8,7 +8,7 @@ export interface CartItem {
   price: number;
   imageUrl: string;
   quantity: number;
-  variantName?: string; // Opcional, para exibição
+  variantName?: string; // Opcional, para exibição da variação (tamanho/cor)
 }
 
 // 2. Tipagem das funções que o carrinho terá

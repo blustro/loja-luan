@@ -1,7 +1,7 @@
 'use client';
 
 import { useCartStore } from '@/store/useCartStore';
-import { ClientOnly } from '@/components/ClientOnly'; // Importe o novo componente
+import { ClientOnly } from '@/components/ClientOnly';
 import {
   Sheet,
   SheetContent,
@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
-import { CartList } from './CartList';
 import { CartSummary } from './CartSummary';
 
 export default function CartSidebar() {
@@ -19,7 +18,6 @@ export default function CartSidebar() {
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    // O ClientOnly garante que o conteúdo só renderize após o mount no cliente
     <ClientOnly>
       <Sheet>
         <SheetTrigger
@@ -33,18 +31,14 @@ export default function CartSidebar() {
           }
         />
 
-        <SheetContent className='w-full sm:max-w-lg flex flex-col'>
-          <SheetHeader>
+        {/* p-0 e overflow-hidden são essenciais para o layout flex funcionar */}
+        <SheetContent className='flex flex-col h-full p-0 overflow-hidden sm:max-w-md'>
+          <SheetHeader className='p-6 pb-4 border-b shrink-0'>
             <SheetTitle>Seu Carrinho</SheetTitle>
           </SheetHeader>
 
-          <div className='flex-1 overflow-y-auto py-6'>
-            <CartList />
-          </div>
-
-          <div className='mt-auto border-t p-4'>
-            <CartSummary />
-          </div>
+          {/* O CartSummary vai gerenciar os itens, o frete e o botão fixo */}
+          <CartSummary />
         </SheetContent>
       </Sheet>
     </ClientOnly>

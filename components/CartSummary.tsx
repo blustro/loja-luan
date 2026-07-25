@@ -4,9 +4,12 @@ import { useState } from 'react';
 import { useCartStore } from '@/store/useCartStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { createCheckoutSession } from '@/app/actions/checkout';
 import { checkoutButtonStyle } from '@/lib/styles';
 import { cn } from '@/lib/utils';
+import { CartList } from './CartList';
 
 interface AddressInfo {
   cep: string;
@@ -17,9 +20,10 @@ interface AddressInfo {
 }
 
 interface ShippingOption {
+  id: string;
   name: string;
   price: number;
-  days?: number;
+  deadline?: string;
 }
 
 export function CartSummary() {
@@ -41,7 +45,6 @@ export function CartSummary() {
     0,
   );
 
-  // O preço do frete agora depende da opção selecionada
   const shippingPrice = selectedShipping ? selectedShipping.price : 0;
   const total = subtotal + shippingPrice;
 
@@ -75,7 +78,6 @@ export function CartSummary() {
         });
         setShippingOptions(data.options);
 
-        // Define a primeira opção (ex: PAC) como padrão automaticamente
         if (data.options && data.options.length > 0) {
           setSelectedShipping(data.options[0]);
         }
@@ -86,6 +88,13 @@ export function CartSummary() {
       setCepError('Erro ao consultar CEP.');
     } finally {
       setLoadingCep(false);
+    }
+  };
+
+  const handleShippingChange = (optionId: string) => {
+    const option = shippingOptions.find((opt) => opt.id === optionId);
+    if (option) {
+      setSelectedShipping(option);
     }
   };
 
@@ -101,117 +110,144 @@ export function CartSummary() {
     else if (response.error) alert(response.error);
   };
 
+  if (items.length === 0) {
+    return (
+      <div className='flex-1 flex flex-col items-center justify-center p-6 text-center text-muted-foreground'>
+        <p>Seu carrinho está vazio.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className='border rounded-lg p-6 space-y-6 h-fit bg-card'>
-      <h2 className='text-xl font-bold'>Resumo do Pedido</h2>
+    <div className='flex flex-col h-full overflow-hidden'>
+      {/* 1. ÁREA ROLÁVEL DO MEIO (Itens + Frete + Endereço) */}
+      <div className='flex-1 overflow-y-auto p-6 space-y-2'>
+        <CartList />
 
-      <div className='flex justify-between text-sm text-muted-foreground'>
-        <span>Subtotal</span>
-        <span>R$ {subtotal.toFixed(2)}</span>
-      </div>
+        <div className='border-t pt-6 space-y-4'>
+          <h3 className='text-xs font-bold text-muted-foreground tracking-wider'>
+            CALCULAR FRETE E ENDEREÇO
+          </h3>
+          <form onSubmit={handleCalculateShipping} className='flex gap-2'>
+            <Input
+              type='text'
+              placeholder='00000-000'
+              value={cep}
+              onChange={(e) => setCep(e.target.value)}
+              maxLength={9}
+            />
+            <Button type='submit' variant='outline' disabled={loadingCep}>
+              {loadingCep ? '...' : 'OK'}
+            </Button>
+          </form>
 
-      <div className='space-y-3 pt-4 border-t'>
-        <p className='text-xs font-bold text-muted-foreground'>
-          CALCULAR FRETE E ENDEREÇO
-        </p>
-        <form onSubmit={handleCalculateShipping} className='flex gap-2'>
-          <Input
-            type='text'
-            placeholder='00000-000'
-            value={cep}
-            onChange={(e) => setCep(e.target.value)}
-            maxLength={9}
-          />
-          <Button type='submit' variant='outline' disabled={loadingCep}>
-            {loadingCep ? '...' : 'OK'}
-          </Button>
-        </form>
+          {cepError && <p className='text-xs text-red-500'>{cepError}</p>}
 
-        {cepError && <p className='text-xs text-red-500'>{cepError}</p>}
+          {address && (
+            <div className='space-y-3 bg-muted/40 p-3 rounded-md overflow-hidden'>
+              <div className='text-xs text-muted-foreground break-words'>
+                📍 {address.logradouro}, {address.bairro} - {address.cidade}/
+                {address.uf}
+              </div>
 
-        {address && (
-          <div className='space-y-3 bg-muted/40 p-3 rounded'>
-            <div className='text-xs text-muted-foreground'>
-              📍 {address.logradouro}, {address.bairro} - {address.cidade}/
-              {address.uf}
+              <div className='grid grid-cols-2 gap-2'>
+                <Input
+                  type='text'
+                  placeholder='Número *'
+                  value={numero}
+                  onChange={(e) => setNumero(e.target.value)}
+                  required
+                />
+                <Input
+                  type='text'
+                  placeholder='Apto / Bloco'
+                  value={complemento}
+                  onChange={(e) => setComplemento(e.target.value)}
+                />
+              </div>
             </div>
+          )}
 
-            <div className='grid grid-cols-2 gap-2'>
-              <Input
-                type='text'
-                placeholder='Número *'
-                value={numero}
-                onChange={(e) => setNumero(e.target.value)}
-                required
-              />
-              <Input
-                type='text'
-                placeholder='Apto / Bloco'
-                value={complemento}
-                onChange={(e) => setComplemento(e.target.value)}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Lista de Opções de Frete (PAC / SEDEX) */}
-        {shippingOptions.length > 0 && (
-          <div className='space-y-2 pt-2'>
-            <p className='text-xs font-bold text-muted-foreground'>
-              OPÇÕES DE ENTREGA
-            </p>
-            <div className='space-y-2'>
-              {shippingOptions.map((opt, index) => (
-                <label
-                  key={index}
-                  className={cn(
-                    'flex items-center justify-between p-2.5 rounded-md border text-sm cursor-pointer transition-all',
-                    selectedShipping?.name === opt.name
-                      ? 'border-primary bg-primary/5 font-medium'
-                      : 'border-border hover:bg-muted/40',
-                  )}
-                >
-                  <div className='flex items-center gap-2.5'>
-                    <input
-                      type='radio'
-                      name='shippingOption'
-                      checked={selectedShipping?.name === opt.name}
-                      onChange={() => setSelectedShipping(opt)}
-                      className='accent-primary'
-                    />
-                    <div>
-                      <p className='text-sm leading-none'>{opt.name}</p>
-                      {opt.days && (
-                        <p className='text-[10px] text-muted-foreground mt-1'>
-                          Até {opt.days} dias úteis
-                        </p>
-                      )}
+          {shippingOptions.length > 0 && (
+            <div className='space-y-2 pt-2 w-full overflow-hidden'>
+              <Label className='text-xs font-bold text-muted-foreground'>
+                OPÇÕES DE ENTREGA
+              </Label>
+              <RadioGroup
+                value={selectedShipping?.id || ''}
+                onValueChange={handleShippingChange}
+                className='space-y-2 w-full'
+              >
+                {shippingOptions.map((opt) => (
+                  <div
+                    key={opt.id}
+                    className={cn(
+                      'flex items-center justify-between p-3 rounded-md border text-sm cursor-pointer transition-all gap-2 w-full box-border overflow-hidden',
+                      selectedShipping?.id === opt.id
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:bg-muted/40',
+                    )}
+                  >
+                    <div className='flex items-center space-x-3 min-w-0 flex-1'>
+                      <RadioGroupItem
+                        value={opt.id}
+                        id={opt.id}
+                        className='shrink-0'
+                      />
+                      <Label
+                        htmlFor={opt.id}
+                        className='cursor-pointer min-w-0'
+                      >
+                        <span className='text-xs text-foreground block truncate'>
+                          {opt.name}
+                        </span>
+                        {opt.deadline && (
+                          <span className='block text-[10px] text-muted-foreground mt-0.5 truncate'>
+                            Prazo: {opt.deadline}
+                          </span>
+                        )}
+                      </Label>
                     </div>
+                    <span className='text-xs font-semibold text-foreground shrink-0 pl-1'>
+                      R$ {opt.price.toFixed(2)}
+                    </span>
                   </div>
-                  <span className='font-semibold'>
-                    R$ {opt.price.toFixed(2)}
-                  </span>
-                </label>
-              ))}
+                ))}
+              </RadioGroup>
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* 2. RODAPÉ FIXO (Totais e Botão de Finalizar sempre visíveis) */}
+      <div className='border-t bg-card p-6 space-y-3 shrink-0 shadow-lg'>
+        <div className='space-y-1 text-sm'>
+          <div className='flex justify-between text-muted-foreground'>
+            <span>Subtotal</span>
+            <span>R$ {subtotal.toFixed(2)}</span>
           </div>
-        )}
-      </div>
+          {selectedShipping && (
+            <div className='flex justify-between text-muted-foreground'>
+              <span>Frete ({selectedShipping.name})</span>
+              <span>R$ {shippingPrice.toFixed(2)}</span>
+            </div>
+          )}
+          <div className='flex justify-between text-lg font-bold text-foreground pt-2 border-t'>
+            <span>Total</span>
+            <span>R$ {total.toFixed(2)}</span>
+          </div>
+        </div>
 
-      <div className='flex justify-between text-lg font-bold pt-4 border-t'>
-        <span>Total</span>
-        <span>R$ {total.toFixed(2)}</span>
+        <Button
+          onClick={handleCheckout}
+          disabled={
+            items.length === 0 || !address || !numero || !selectedShipping
+          }
+          className={cn(checkoutButtonStyle, 'w-full')}
+        >
+          Finalizar Compra
+        </Button>
       </div>
-
-      <Button
-        onClick={handleCheckout}
-        disabled={
-          items.length === 0 || !address || !numero || !selectedShipping
-        }
-        className={cn(checkoutButtonStyle, 'w-full')}
-      >
-        Finalizar Compra
-      </Button>
     </div>
   );
 }
