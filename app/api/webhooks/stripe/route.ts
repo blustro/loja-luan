@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@sanity/client';
 import Stripe from 'stripe';
+import { Resend } from 'resend';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -14,6 +15,8 @@ const writeClient = createClient({
   token: process.env.SANITY_API_WRITE_TOKEN,
   useCdn: false,
 });
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -66,8 +69,18 @@ export async function POST(req: Request) {
         'shipping',
     );
 
-    const customerEmail = session.customer_details?.email;
-    const customerName = session.customer_details?.name;
+    // Busque do expandedSession (que traz os dados mais atualizados do Stripe)
+    const customerEmail =
+      expandedSession.customer_details?.email ||
+      session.customer_details?.email;
+
+    const customerName =
+      expandedSession.customer_details?.name ||
+      session.customer_details?.name ||
+      'Cliente';
+
+    // Log para confirmar que agora pegou corretamente
+    console.log('DEBUG - E-mail capturado:', customerEmail);
 
     try {
       // 1. Salvar o pedido no Sanity CMS
@@ -106,7 +119,87 @@ export async function POST(req: Request) {
       const createdOrder = await writeClient.create(orderDoc as any);
       console.log('Pedido salvo com sucesso no Sanity ID:', createdOrder._id);
 
-      // --- 2. DAR BAIXA NO ESTOQUE DAS VARIANTES NO SANITY ---
+      // --- 2. ENVIAR E-MAIL DE CONFIRMAÇÃO ---
+      if (customerEmail) {
+        try {
+          // Mapeia os produtos para gerar as linhas da tabela no HTML do e-mail
+          const itemsHtml = products
+            .map((p) => {
+              const productObj = p.price?.product as Stripe.Product;
+              const imageUrl = productObj?.images?.[0];
+              const qty = p.quantity || 1;
+              const unitPrice = p.amount_total ? p.amount_total / 100 / qty : 0;
+              const productMetadata = productObj?.metadata;
+
+              return `
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                ${
+                  imageUrl
+                    ? `<td style="padding: 12px 10px 12px 0; width: 50px; vertical-align: middle;">
+                         <img src="${imageUrl}" alt="${p.description}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; display: block;" />
+                       </td>`
+                    : ''
+                }
+                <td style="padding: 12px 0; vertical-align: middle; font-size: 14px; color: #333;">
+                  <strong>${p.description}</strong><br/>
+                  <span style="font-size: 12px; color: #6b7280;">
+                    Qtd: ${qty} ${productMetadata?.variantKey ? `| Variante: ${productMetadata.variantKey}` : ''}
+                  </span>
+                </td>
+                <td style="padding: 12px 0; vertical-align: middle; text-align: right; font-size: 14px; color: #333; white-space: nowrap;">
+                  R$ ${(unitPrice * qty).toFixed(2)}
+                </td>
+              </tr>
+            `;
+            })
+            .join('');
+
+          await resend.emails.send({
+            from: 'Mano do Corre Store <onboarding@resend.dev>',
+            to: customerEmail,
+            subject: `Confirmação do Pedido #${createdOrder._id.slice(-6)}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: #ffffff;">
+                <h2 style="color: #4f46e5; margin-top: 0;">Obrigado pela sua compra, ${customerName || 'Cliente'}!</h2>
+                <p style="color: #555;">Recebemos o seu pagamento com sucesso e o seu pedido já está sendo preparado para envio.</p>
+                
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+                
+                <h3 style="font-size: 16px; color: #111; margin-bottom: 12px;">Itens do Pedido:</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tbody>
+                    ${itemsHtml}
+                  </tbody>
+                </table>
+
+                <div style="margin-top: 20px; background-color: #f9fafb; padding: 15px; border-radius: 6px;">
+                  <p style="margin: 4px 0; font-size: 14px;"><strong>Frete:</strong> R$ ${orderDoc.shippingOption.cost.toFixed(2)} (${orderDoc.shippingOption.name})</p>
+                  <p style="margin: 4px 0; font-size: 16px; color: #4f46e5;"><strong>Total pago:</strong> R$ ${orderDoc.totalPrice.toFixed(2)}</p>
+                </div>
+
+                <h3 style="font-size: 16px; color: #111; margin-top: 20px; margin-bottom: 8px;">Endereço de Entrega:</h3>
+                <p style="margin: 0; font-size: 14px; color: #555; line-height: 1.5;">
+                  ${addressData.logradouro}, ${addressData.numero} ${addressData.complemento ? `- ${addressData.complemento}` : ''}<br/>
+                  ${addressData.bairro} - ${addressData.cidade}/${addressData.uf}<br/>
+                  CEP: ${addressData.cep}
+                </p>
+                
+                <p style="margin-top: 30px; font-size: 13px; color: #6b7280; text-align: center;">
+                  Se tiver qualquer dúvida, entre em contato respondendo a esta mensagem.
+                </p>
+              </div>
+            `,
+          });
+          console.log(
+            `E-mail de confirmação enriquecido enviado para: ${customerEmail}`,
+          );
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (emailError: any) {
+          console.error('Erro ao enviar e-mail:', emailError.message);
+        }
+      }
+
+      // --- 3. DAR BAIXA NO ESTOQUE DAS VARIANTES NO SANITY ---
       for (const item of products) {
         const productMetadata = (item.price?.product as Stripe.Product)
           ?.metadata;
