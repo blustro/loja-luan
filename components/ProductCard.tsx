@@ -13,15 +13,19 @@ import { Label } from '@/components/ui/label';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Product } from '@/app/types/sanity';
+import { Product, Variant } from '@/app/types/sanity';
 
 export function ProductCard({ product }: { product: Product }) {
-  // Estado inicial: a primeira variante (ou a única)
-  const [selectedVariant, setSelectedVariant] = useState(product.variants?.[0]);
+  // Filtra variantes nulas com segurança para a lista e para o estado inicial
+  const validVariants = product.variants?.filter(Boolean) || [];
+
+  // Garante que se não houver variante, o valor inicial será null (e nunca undefined)
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(
+    validVariants[0] ?? null,
+  );
   const [quantity, setQuantity] = useState(1);
 
-  console.log('Variante selecionada:', selectedVariant);
-  console.log('Stock da variante:', selectedVariant?.stock);
+  const currentPrice = selectedVariant?.price ?? product.price ?? 0;
 
   return (
     <Card className='flex flex-col h-full overflow-hidden'>
@@ -46,29 +50,37 @@ export function ProductCard({ product }: { product: Product }) {
         <h2 className='text-lg font-semibold mb-2'>{product.title}</h2>
 
         <div className='flex justify-between'>
-          {/* Select de Tamanho/Variante */}
+          {/* Select de Tamanho/Variante controlado por ID com blindagem de texto */}
           <div className='space-y-1'>
             <Label className='text-xs font-bold text-muted-foreground'>
               TAMANHO
             </Label>
             <Select
-              key={selectedVariant?.title}
+              value={selectedVariant?.optionValue}
               onValueChange={(val) =>
                 setSelectedVariant(
-                  product.variants?.find((v) => v.title === val),
+                  validVariants.find((v) => v.optionValue === val) ?? null,
                 )
               }
-              defaultValue={product.variants?.[0]?.title}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder='Selecione' />
               </SelectTrigger>
               <SelectContent>
-                {product.variants?.map((v) => (
-                  <SelectItem key={v.title} value={v.title}>
-                    {v.title}
-                  </SelectItem>
-                ))}
+                {validVariants.map((v) => {
+                  // Blindagem: se optionValue parecer um ID técnico ou estiver vazio, exibe "Tamanho Único"
+                  const isIdLike = v.optionValue && v.optionValue.length > 10;
+                  const displayText =
+                    !isIdLike && v.optionValue
+                      ? v.optionValue
+                      : 'Tamanho Único';
+
+                  return (
+                    <SelectItem key={v._id} value={v.optionValue}>
+                      {displayText}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -99,8 +111,8 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
         </div>
 
-        <p className='text-xl font-bold mt-auto'>
-          R$ {selectedVariant?.price.toFixed(2) ?? 0}
+        <p className='text-xl font-bold mt-auto pt-4'>
+          R$ {currentPrice.toFixed(2)}
         </p>
       </CardContent>
 

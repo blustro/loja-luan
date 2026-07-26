@@ -84,7 +84,7 @@ export function CartSummary() {
       } else {
         setCepError(data.error || 'CEP não encontrado.');
       }
-    } catch (err) {
+    } catch {
       setCepError('Erro ao consultar CEP.');
     } finally {
       setLoadingCep(false);
@@ -100,7 +100,11 @@ export function CartSummary() {
 
   const handleCheckout = async () => {
     const response = await createCheckoutSession({
-      items,
+      items: items.map((item) => ({
+        productId: item.productId,
+        variantId: item._id, // O _id do item no carrinho guarda o ID/Key da variante embutida
+        quantity: item.quantity,
+      })),
       shippingCost: shippingPrice,
       shippingName: selectedShipping?.name || 'Frete',
       address: address ? { ...address, numero, complemento } : null,

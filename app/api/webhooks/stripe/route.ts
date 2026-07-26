@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
@@ -26,7 +27,6 @@ export async function POST(req: Request) {
 
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     console.error(`⚠️ Erro na assinatura do Webhook: ${err.message}`);
     return NextResponse.json(
@@ -59,17 +59,16 @@ export async function POST(req: Request) {
 
     const products = lineItems.filter(
       (item) =>
-        (item.price?.product as Stripe.Product)?.metadata?.variantKey !==
+        (item.price?.product as Stripe.Product)?.metadata?.variantId !==
         'shipping',
     );
 
     const shippingItem = lineItems.find(
       (item) =>
-        (item.price?.product as Stripe.Product)?.metadata?.variantKey ===
+        (item.price?.product as Stripe.Product)?.metadata?.variantId ===
         'shipping',
     );
 
-    // Busque do expandedSession (que traz os dados mais atualizados do Stripe)
     const customerEmail =
       expandedSession.customer_details?.email ||
       session.customer_details?.email;
@@ -79,7 +78,6 @@ export async function POST(req: Request) {
       session.customer_details?.name ||
       'Cliente';
 
-    // Log para confirmar que agora pegou corretamente
     console.log('DEBUG - E-mail capturado:', customerEmail);
 
     try {
@@ -91,7 +89,6 @@ export async function POST(req: Request) {
         customerEmail: customerEmail || '',
         shippingAddress: addressData,
 
-        // 💡 USANDO OS NOMES EXATOS DO SCHEMA DO SANITY:
         shippingName:
           shippingItem?.description ||
           session.metadata?.shippingName ||
@@ -113,7 +110,7 @@ export async function POST(req: Request) {
             price: p.amount_total
               ? p.amount_total / 100 / (p.quantity || 1)
               : 0,
-            variantKey: productMetadata?.variantKey || '',
+            variantKey: productMetadata?.variantId || '',
           };
         }),
         totalPrice: session.amount_total ? session.amount_total / 100 : 0,
@@ -121,7 +118,6 @@ export async function POST(req: Request) {
         createdAt: new Date().toISOString(),
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const createdOrder = await writeClient.create(orderDoc as any);
       console.log('Pedido salvo com sucesso no Sanity ID:', createdOrder._id);
 
@@ -148,7 +144,7 @@ export async function POST(req: Request) {
           <td style="padding: 12px 0; vertical-align: middle; font-size: 14px; color: #333;">
             <strong>${p.description}</strong><br/>
             <span style="font-size: 12px; color: #6b7280;">
-              Qtd: ${qty} ${productMetadata?.variantKey ? `| Variante: ${productMetadata.variantKey}` : ''}
+              Qtd: ${qty} ${productMetadata?.variantId && productMetadata.variantId !== 'shipping' ? `| Variante ID: ${productMetadata.variantId}` : ''}
             </span>
           </td>
           <td style="padding: 12px 0; vertical-align: middle; text-align: right; font-size: 14px; color: #333; white-space: nowrap;">
@@ -195,42 +191,56 @@ export async function POST(req: Request) {
         </div>
       `,
           });
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (emailError: any) {
           console.error('Erro ao enviar e-mail:', emailError.message);
         }
       }
 
-      // --- 3. DAR BAIXA NO ESTOQUE DAS VARIANTES NO SANITY ---
+      // --- 3. DAR BAIXA NO ESTOQUE DA VARIANTE NO ARRAY EMBUTIDO DO SANITY ---
       for (const item of products) {
         const productMetadata = (item.price?.product as Stripe.Product)
           ?.metadata;
         const productId = productMetadata?.productId;
-        const variantKey = productMetadata?.variantKey;
+        const variantId = productMetadata?.variantId;
         const qtyBought = item.quantity || 1;
 
-        if (productId && variantKey) {
+        if (productId && variantId) {
           try {
-            // Atualiza o estoque usando a propriedade computada correta com colchetes []
-            await writeClient
-              .patch(productId)
-              .dec({ [`variants[_key=="${variantKey}"].stock`]: qtyBought })
-              .commit();
-
-            console.log(
-              `Estoque atualizado: -${qtyBought} para o produto ${productId} (Variante: ${variantKey})`,
+            // Busca o produto e seu array de variantes atual
+            const productDoc = await writeClient.fetch(
+              `*[_type == "product" && _id == $productId][0]{_id, variants}`,
+              { productId },
             );
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+            if (productDoc && productDoc.variants) {
+              const updatedVariants = productDoc.variants.map((v: any) => {
+                if (v._key === variantId) {
+                  return {
+                    ...v,
+                    stock: Math.max(0, (v.stock || 0) - qtyBought),
+                  };
+                }
+                return v;
+              });
+
+              // Atualiza o documento de produto com o array modificado
+              await writeClient
+                .patch(productId)
+                .set({ variants: updatedVariants })
+                .commit();
+
+              console.log(
+                `Estoque atualizado: -${qtyBought} para a variante (${variantId}) no produto ${productId}`,
+              );
+            }
           } catch (stockError: any) {
             console.error(
-              `Erro ao atualizar estoque do produto ${productId}:`,
+              `Erro ao atualizar estoque da variante ${variantId}:`,
               stockError.message,
             );
           }
         }
       }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (sanityError: any) {
       console.error('Erro ao salvar pedido no Sanity:', sanityError.message);
       return NextResponse.json(

@@ -1,4 +1,3 @@
-// lib/sanity/queries.ts
 import { groq } from 'next-sanity';
 
 // Fragmentos reutilizáveis
@@ -6,13 +5,15 @@ export const productFields = groq`
   _id,
   title,
   slug,
-  variants[] {
-    _key,
+  price,
+  "variants": variants[]{
+    "_id": _key,
+    optionType,
+    optionValue, // <--- ADICIONE ESTA LINHA
     price,
-    stripePriceId,
     sku,
-    title,
-    stock
+    stock,
+    "imageUrl": image.asset->url
   },
   "imageUrl": coalesce(image.asset->url, images[0].asset->url),
   "categoryName": category->title
@@ -31,23 +32,13 @@ export const allProductsQuery = groq`
   (!defined($search) || title match $search + "*")
 ] { ${productFields} }
 `;
+
 export const allCategoriesQuery = groq`*[_type == "category"] | order(title asc) { ${categoryFields} }`;
 
+// Otimizado: Reaproveita productFields e adiciona description e details
 export const productBySlugQuery = groq`*[_type == "product" && slug.current == $slug][0]{
-  _id,
-  title,
-  price,
-  "imageUrl": images[0].asset->url,
+  ${productFields},
   description,
-  // Novos campos adicionados aqui:
-  variants[] {
-    _key,
-    title,
-    price,
-    sku,
-    stripePriceId,
-    stock
-  },
   details {
     material,
     careInstructions

@@ -1,11 +1,11 @@
-'use client'; // <-- Isso avisa ao Next.js que este componente roda no navegador
+'use client';
 
 import { Product, Variant } from '@/app/types/sanity';
 import { Button } from '@/components/ui/button';
 import { checkoutButtonStyle } from '@/lib/styles';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/store/useCartStore';
-import { ShoppingCart } from 'lucide-react'; // Ícone nativo que já vem com shadcn
+import { ShoppingCart } from 'lucide-react';
 
 interface AddToCartButtonProps {
   product: Product;
@@ -20,10 +20,6 @@ export function AddToCartButton({
   quantity,
   disabled,
 }: AddToCartButtonProps) {
-  // Agora você pode usar 'variant' aqui dentro para acessar o preço correto
-  // e enviar para o Stripe/Carrinho
-
-  // Puxamos a função de adicionar do nosso Zustand
   const addItem = useCartStore((state) => state.addItem);
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -34,21 +30,30 @@ export function AddToCartButton({
     const selectedVariant = variant ?? product.variants?.[0];
 
     if (!selectedVariant) {
-      alert('Erro: Este produto não possui preço configurado.');
+      alert('Erro: Este produto não possui variante configurada.');
       return;
     }
 
-    addItem(
-      {
-        _id: `${product._id}-${selectedVariant.title}`,
-        title: `${product.title} (${selectedVariant.title})`,
-        price: selectedVariant.price,
-        imageUrl: product.imageUrl,
-      },
-      quantity,
-    ); // Passamos a quantidade aqui!
+    // Fallback seguro para o preço
+    const unitPrice = selectedVariant.price ?? product.price ?? 0;
+    const variantLabel = selectedVariant.title || selectedVariant.optionValue;
 
-    alert(`${product.title} adicionado ao carrinho!`); // Um aviso simples por enquanto
+    // Passando o objeto completo exigido pela interface CartItem
+    addItem({
+      id: selectedVariant._id,
+      _id: selectedVariant._id,
+      productId: product._id,
+      title: product.title,
+      price: unitPrice,
+      quantity: quantity,
+      stock: selectedVariant.stock ?? 0,
+      imageUrl: selectedVariant.imageUrl || product.imageUrl || '',
+      variantTitle: variantLabel,
+      optionType: selectedVariant.optionType,
+      optionValue: selectedVariant.optionValue,
+    });
+
+    alert(`${product.title} (${variantLabel}) adicionado ao carrinho!`);
   };
 
   return (
