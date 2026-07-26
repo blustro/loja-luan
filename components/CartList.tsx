@@ -26,7 +26,7 @@ export function CartList() {
 
           return (
             <div key={item._id} className='py-3 first:pt-0 last:pb-0 space-y-2'>
-              {/* LINHA 1: Imagem, Título (limitado a 2 linhas), Variante e Preço Total */}
+              {/* LINHA 1: Imagem, Título, Variante e Preço Total */}
               <div className='flex items-start gap-3'>
                 {item.imageUrl ? (
                   <div className='relative w-14 h-14 shrink-0 rounded-md overflow-hidden border bg-muted'>
@@ -44,13 +44,13 @@ export function CartList() {
                 )}
 
                 <div className='flex-1 min-w-0'>
-                  {/* line-clamp-2 limita o nome a no máximo duas linhas, evitando quebras de layout */}
                   <h4 className='text-xs font-medium text-foreground line-clamp-2 leading-snug'>
                     {item.title}
                   </h4>
-                  {item.variantName && (
+                  {/* Utilizando variantTitle que existe na tipagem do CartItem */}
+                  {item.variantTitle && (
                     <span className='inline-block text-[10px] text-muted-foreground mt-0.5 bg-muted px-1.5 py-0.5 rounded'>
-                      Tam/Var: {item.variantName}
+                      Tam/Var: {item.variantTitle}
                     </span>
                   )}
                 </div>

@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button';
 import { Variant } from '@/app/types/sanity';
-import { cn } from '@/lib/utils';
 
 interface VariantSelectorProps {
   variants: Variant[];
@@ -20,12 +19,17 @@ export function VariantSelector({
       <p className='text-xs font-bold text-muted-foreground'>TAMANHO</p>
       <div className='flex flex-wrap gap-2'>
         {variants.map((v, index) => {
+          // Substituído _key por _id conforme a tipagem do projeto
           const isSelected =
-            selectedVariant?._key !== undefined &&
-            selectedVariant._key === v._key;
+            selectedVariant?._id !== undefined && selectedVariant._id === v._id;
 
-          // Garantimos que a chave seja única unindo o _key (ou sku) com o índice
-          const uniqueKey = `${v._key ?? v.sku ?? 'variant'}-${index}`;
+          // Chave única baseada em _id com fallback para sku ou índice
+          const uniqueKey = `${v._id ?? v.sku ?? 'variant'}-${index}`;
+
+          // Tratamento seguro para exibir o valor ou um texto padrão
+          const isTechnicalId =
+            !v.optionValue || /^[a-f0-9]{8,}$/i.test(v.optionValue);
+          const displayText = isTechnicalId ? 'Tamanho Único' : v.optionValue;
 
           return (
             <Button
@@ -34,7 +38,7 @@ export function VariantSelector({
               variant={isSelected ? 'default' : 'outline'}
               onClick={() => onSelect(v)}
             >
-              {v.title}
+              {displayText}
             </Button>
           );
         })}
