@@ -37,6 +37,7 @@ export function AddToCartButton({
     const unitPrice = selectedVariant.price ?? product.price ?? 0;
     const variantLabel = selectedVariant.title || selectedVariant.optionValue;
 
+    // No seu AddToCartButton.tsx
     addItem({
       id: selectedVariant._id,
       _id: selectedVariant._id,
@@ -44,7 +45,7 @@ export function AddToCartButton({
       title: product.title,
       price: unitPrice,
       quantity: quantity,
-      stock: selectedVariant.stock ?? 0,
+      stock: selectedVariant.stock ?? 99, // <--- Alterado de 0 para 99 como segurança
       imageUrl: selectedVariant.imageUrl || product.imageUrl || '',
       variantTitle: variantLabel,
       optionType: selectedVariant.optionType,

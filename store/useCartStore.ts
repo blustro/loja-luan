@@ -1,23 +1,21 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// 1. Tipagem alinhada com os atributos flexíveis do Sanity
 export type OptionType = 'clothing_size' | 'shoe_size' | 'color' | 'other';
 
 export interface CartItem {
   id: string;
-  _id: string; // Mapeado a partir do _key da variante embutida no array do Sanity
-  productId: string; // ID do Produto pai
-  title: string; // Nome do Produto
-  price: number; // Preço final (preço específico da variante ou preço base)
-  imageUrl: string; // Imagem específica da variante ou do produto base
+  _id: string;
+  productId: string;
+  title: string;
+  price: number;
+  imageUrl: string;
   quantity: number;
-  stock: number; // Estoque máximo da variante (crucial para validação)
+  stock: number;
 
-  // Detalhes estruturados da variante (iguais ao Sanity)
-  variantTitle?: string; // Ex: "Azul - G" ou "Preto - 41"
+  variantTitle?: string;
   optionType?: OptionType;
-  optionValue?: string; // Ex: "G", "38", "Azul"
+  optionValue?: string;
 }
 
 interface CartState {
@@ -34,22 +32,21 @@ export const useCartStore = create<CartState>()(
     (set) => ({
       items: [],
 
-      // Adiciona um item respeitando o limite de estoque
-      // Substitua o trecho do addItem na sua store por este:
-
+      // Adiciona um item respeitando o limite de estoque (com fallback seguro se stock for undefined)
       addItem: (product) =>
         set((state) => {
           const existingItem = state.items.find(
             (item) => item._id === product._id,
           );
 
-          // Pega a quantidade que veio dentro do objeto do produto (ou 1 como fallback)
           const quantityToAdd = product.quantity ?? 1;
+          const maxStock = product.stock ?? 99; // Fallback se o estoque não vier do Sanity
 
           if (existingItem) {
+            const currentMaxStock = existingItem.stock ?? 99;
             const newQuantity = Math.min(
               existingItem.quantity + quantityToAdd,
-              product.stock,
+              currentMaxStock,
             );
             return {
               items: state.items.map((item) =>
@@ -63,7 +60,7 @@ export const useCartStore = create<CartState>()(
           return {
             items: [
               ...state.items,
-              { ...product, quantity: Math.min(quantityToAdd, product.stock) },
+              { ...product, quantity: Math.min(quantityToAdd, maxStock) },
             ],
           };
         }),
@@ -74,12 +71,13 @@ export const useCartStore = create<CartState>()(
           items: state.items.filter((item) => item._id !== id),
         })),
 
-      // Aumenta a quantidade em +1 (respeitando o estoque)
+      // Aumenta a quantidade em +1 com proteção contra 'undefined' no stock
       increaseQuantity: (id) =>
         set((state) => ({
           items: state.items.map((item) => {
             if (item._id === id) {
-              const newQuantity = Math.min(item.quantity + 1, item.stock);
+              const maxStock = item.stock ?? 99; // Garante que nunca será NaN se o stock vier vazio
+              const newQuantity = Math.min(item.quantity + 1, maxStock);
               return { ...item, quantity: newQuantity };
             }
             return item;
