@@ -47,7 +47,7 @@ export function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <Card className='flex flex-col h-full overflow-hidden group relative'>
+    <Card className='flex flex-col h-full overflow-hidden group relative p-0'>
       {/* Imagem de Capa Estática no Card Inicial */}
       <Link
         href={`/product/${product.slug.current}`}

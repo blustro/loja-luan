@@ -16,6 +16,8 @@ import { Product, Variant } from '@/app/types/sanity';
 import { ProductConfigurator } from '@/components/ProductConfigurator';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import { ProductImageCarousel } from '@/components/ProductImageCarousel';
+import { checkoutButtonStyle } from '@/lib/styles';
+import { cn } from '@/lib/utils';
 
 interface ProductQuickViewProps {
   product: Product;
@@ -56,7 +58,10 @@ export function ProductQuickView({
             type='button'
             size='icon'
             variant='secondary'
-            className='absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-md opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20'
+            className={cn(
+              checkoutButtonStyle,
+              'absolute top-2 right-2 h-8 w-8 rounded-full backdrop-blur-sm shadow-md opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20',
+            )}
             aria-label='Visualização rápida'
           >
             <Eye className='h-4 w-4' />
