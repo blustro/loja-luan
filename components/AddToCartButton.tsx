@@ -21,7 +21,7 @@ export function AddToCartButton({
   quantity,
   disabled,
 }: AddToCartButtonProps) {
-  const addItem = useCartStore((state) => state.addItem);
+  const { items, addItem, removeItem } = useCartStore();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -35,8 +35,27 @@ export function AddToCartButton({
     }
 
     const unitPrice = selectedVariant.price ?? product.price ?? 0;
+    const maxStock = selectedVariant.stock ?? 99;
 
-    // Função auxiliar segura para obter o rótulo da variante
+    // Verifica quanto já existe do item no carrinho e valida com a quantidade nova
+    const existingItem = items.find((item) => item._id === selectedVariant._id);
+    const currentQtyInCart = existingItem ? existingItem.quantity : 0;
+    const totalRequestedQty = currentQtyInCart + quantity;
+
+    if (totalRequestedQty > maxStock) {
+      toast.warning(
+        `Ops! Você atingiu o limite máximo em estoque (${maxStock} un.) para ${product.title}.`,
+        {
+          unstyled: true,
+          classNames: {
+            toast:
+              'bg-amber-50 text-amber-900 border border-amber-200 p-4 rounded-lg shadow-sm flex items-center gap-3 font-bold text-xs',
+          },
+        },
+      );
+      return;
+    }
+
     const getVariantLabel = (v: Variant) => {
       return !v.optionValue ||
         v.optionValue.length > 10 ||
@@ -47,20 +66,22 @@ export function AddToCartButton({
 
     const variantLabel = getVariantLabel(selectedVariant);
 
-    addItem({
+    const cartItemData = {
       id: selectedVariant._id,
       _id: selectedVariant._id,
       productId: product._id,
       title: product.title,
       price: unitPrice,
       quantity: quantity,
-      stock: selectedVariant.stock ?? 99,
+      stock: maxStock,
       imageUrl: selectedVariant.imageUrl || product.imageUrl || '',
       variantTitle: variantLabel,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       optionType: selectedVariant.optionType as any,
       optionValue: selectedVariant.optionValue,
-    });
+    };
+
+    addItem(cartItemData);
 
     toast.success(
       `${product.title} (${variantLabel}) adicionado ao carrinho!`,
@@ -68,7 +89,22 @@ export function AddToCartButton({
         unstyled: true,
         classNames: {
           toast:
-            'bg-green-50 text-green-900 border border-green-200 p-4 rounded-lg shadow-sm flex items-center gap-3 text-xs font-bold',
+            'bg-green-50 text-green-900 border border-green-200 p-4 rounded-lg shadow-sm flex items-center justify-between gap-4 font-bold text-xs w-full',
+          actionButton:
+            'bg-green-900 text-white px-3 py-1.5 rounded text-[11px] hover:bg-green-800 transition-colors shrink-0',
+        },
+        action: {
+          label: 'Desfazer',
+          onClick: () => {
+            removeItem(cartItemData._id);
+            toast.info('Ação desfeita. Item removido do carrinho.', {
+              unstyled: true,
+              classNames: {
+                toast:
+                  'bg-red-50 text-red-900 border border-red-200 p-4 rounded-lg shadow-sm flex items-center gap-3 font-bold text-xs',
+              },
+            });
+          },
         },
       },
     );
