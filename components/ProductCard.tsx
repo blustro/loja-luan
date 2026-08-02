@@ -37,6 +37,7 @@ export function ProductCard({ product }: { product: Product }) {
               alt={product.title}
               fill
               sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw'
+              priority // <--- Adicione isso para carregar a imagem imediatamente e eliminar o aviso de LCP
               className='object-cover transition-transform hover:scale-105'
             />
           </div>
@@ -56,10 +57,25 @@ export function ProductCard({ product }: { product: Product }) {
               TAMANHO
             </Label>
             <Select
-              value={selectedVariant?.optionValue}
+              value={
+                selectedVariant
+                  ? selectedVariant.optionValue &&
+                    selectedVariant.optionValue.length <= 10 &&
+                    !/^[a-f0-9]{8,}$/i.test(selectedVariant.optionValue)
+                    ? selectedVariant.optionValue
+                    : 'Tamanho Único'
+                  : ''
+              }
               onValueChange={(val) =>
                 setSelectedVariant(
-                  validVariants.find((v) => v.optionValue === val) ?? null,
+                  validVariants.find((v) => {
+                    const isId =
+                      !v.optionValue ||
+                      v.optionValue.length > 10 ||
+                      /^[a-f0-9]{8,}$/i.test(v.optionValue);
+                    const label = isId ? 'Tamanho Único' : v.optionValue;
+                    return label === val;
+                  }) ?? null,
                 )
               }
             >
@@ -68,16 +84,16 @@ export function ProductCard({ product }: { product: Product }) {
               </SelectTrigger>
               <SelectContent>
                 {validVariants.map((v) => {
-                  // Blindagem: se optionValue parecer um ID técnico ou estiver vazio, exibe "Tamanho Único"
-                  const isIdLike = v.optionValue && v.optionValue.length > 10;
-                  const displayText =
-                    !isIdLike && v.optionValue
-                      ? v.optionValue
-                      : 'Tamanho Único';
+                  // Padroniza o valor: se não houver optionValue ou se parecer um ID técnico, usa "Tamanho Único"
+                  const isIdLike =
+                    !v.optionValue ||
+                    v.optionValue.length > 10 ||
+                    /^[a-f0-9]{8,}$/i.test(v.optionValue);
+                  const cleanValue = isIdLike ? 'Tamanho Único' : v.optionValue;
 
                   return (
-                    <SelectItem key={v._id} value={v.optionValue}>
-                      {displayText}
+                    <SelectItem key={v._id} value={cleanValue}>
+                      {cleanValue}
                     </SelectItem>
                   );
                 })}
