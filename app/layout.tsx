@@ -1,33 +1,45 @@
-import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import Header from '@/components/Header';
 import { client } from '@/sanity/lib/client';
-// 2. Configuração da fonte
-const inter = Inter({ subsets: ['latin'] });
+import { Toaster } from 'sonner';
 
-export const metadata: Metadata = {
-  title: 'Mano do corre',
-  description: 'E-commerce rápido e eficiente',
-};
+const inter = Inter({ subsets: ['latin'] });
 
 export default async function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  const settings = await client.fetch(
-    `*[_type == "settings"][0]{ primaryColor }`,
-  );
-  const primaryColor = settings?.primaryColor?.hex || '#000000';
+}) {
+  let primaryColor = '#ccff00';
+
+  try {
+    const settings = await client.fetch(
+      `*[_type == "settings"][0]{ primaryColor }`,
+    );
+    if (settings?.primaryColor?.hex) {
+      primaryColor = settings.primaryColor.hex;
+    }
+  } catch (error) {
+    console.error('Erro ao buscar configurações do Sanity no Layout:', error);
+  }
+
   return (
     <html lang='pt-BR'>
       <body
         className={inter.className}
         style={{ '--primary-color': primaryColor } as React.CSSProperties}
       >
-        <Header />
-        <main className='container mx-auto max-w-6xl p-4'>{children}</main>
+        <Toaster
+          position='bottom-center' // Melhor para telas de celular
+          richColors
+          expand={false} // Mantém os toasts colapsados ocupando menos espaço
+          visibleToasts={2} // Mostra no máximo 2 toasts por vez para não lotar a tela pequena
+          closeButton // Adiciona botão de fechamento acessível
+          toastOptions={{
+            className: 'w-full max-w-sm mx-auto', // Garante largura responsiva correta
+          }}
+        />{' '}
+        {children}
       </body>
     </html>
   );
