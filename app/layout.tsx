@@ -29,7 +29,16 @@ export default async function RootLayout({
         className={inter.className}
         style={{ '--primary-color': primaryColor } as React.CSSProperties}
       >
-        <Toaster />
+        <Toaster
+          position='bottom-center' // Melhor para telas de celular
+          richColors
+          expand={false} // Mantém os toasts colapsados ocupando menos espaço
+          visibleToasts={2} // Mostra no máximo 2 toasts por vez para não lotar a tela pequena
+          closeButton // Adiciona botão de fechamento acessível
+          toastOptions={{
+            className: 'w-full max-w-sm mx-auto', // Garante largura responsiva correta
+          }}
+        />{' '}
         {children}
       </body>
     </html>
