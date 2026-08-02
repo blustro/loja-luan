@@ -9,10 +9,18 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const settings = await client.fetch(
-    `*[_type == "settings"][0]{ primaryColor }`,
-  );
-  const primaryColor = settings?.primaryColor?.hex || '#ccff00';
+  let primaryColor = '#ccff00';
+
+  try {
+    const settings = await client.fetch(
+      `*[_type == "settings"][0]{ primaryColor }`,
+    );
+    if (settings?.primaryColor?.hex) {
+      primaryColor = settings.primaryColor.hex;
+    }
+  } catch (error) {
+    console.error('Erro ao buscar configurações do Sanity no Layout:', error);
+  }
 
   return (
     <html lang='pt-BR'>
