@@ -30,12 +30,28 @@ export const product = {
     },
     {
       name: 'image',
-      title: 'Imagem Principal',
+      title: 'Imagem Principal (Capa)',
       type: 'image',
       options: {
         hotspot: true,
       },
+      validation: (Rule: any) => Rule.required(),
     },
+    defineField({
+      name: 'images',
+      title: 'Galeria de Imagens do Produto',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: {
+            hotspot: true,
+          },
+        },
+      ],
+      description:
+        'Adicione fotos extras para exibir no carrossel e na visualização rápida.',
+    }),
     {
       name: 'description',
       title: 'Descrição',

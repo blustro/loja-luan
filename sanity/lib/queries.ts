@@ -9,13 +9,16 @@ export const productFields = groq`
   "variants": variants[]{
     "_id": _key,
     optionType,
-    optionValue, // <--- ADICIONE ESTA LINHA
+    optionValue,
     price,
     sku,
     stock,
-    "imageUrl": image.asset->url
+    "imageUrl": image.asset->url + "?w=600&auto=format&fit=max"
   },
-  "imageUrl": coalesce(image.asset->url, images[0].asset->url),
+  "imageUrl": coalesce(image.asset->url, images[0].asset->url) + "?w=800&auto=format&fit=max",
+  "images": images[]{
+    "url": asset->url + "?w=800&auto=format&fit=max"
+  }.url,
   "categoryName": category->title
 `;
 
@@ -35,7 +38,6 @@ export const allProductsQuery = groq`
 
 export const allCategoriesQuery = groq`*[_type == "category"] | order(title asc) { ${categoryFields} }`;
 
-// Otimizado: Reaproveita productFields e adiciona description e details
 export const productBySlugQuery = groq`*[_type == "product" && slug.current == $slug][0]{
   ${productFields},
   description,
@@ -47,7 +49,7 @@ export const productBySlugQuery = groq`*[_type == "product" && slug.current == $
 
 export const globalDataQuery = groq`{
   "settings": *[_type == "settings"][0]{ 
-    "logo": images[0].asset->url, 
+    "logo": images[0].asset->url + "?w=200&auto=format", 
     "primaryColor": primaryColor.hex 
   },
   "categories": *[_type == "category"] | order(title asc) { 
