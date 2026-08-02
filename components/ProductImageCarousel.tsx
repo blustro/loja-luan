@@ -1,69 +1,117 @@
 'use client';
 
+import * as React from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from '@/components/ui/carousel';
+import { Button } from '@base-ui/react';
+import { cn } from '@/lib/utils';
+import { checkoutButtonStyle } from '@/lib/styles';
 
 interface ProductImageCarouselProps {
   images: string[];
-  currentIndex: number;
-  onPrev: (e: React.MouseEvent) => void;
-  onNext: (e: React.MouseEvent) => void;
   title: string;
   heightClass?: string; // Ex: 'h-48' para o card ou 'h-64' para o drawer
 }
 
 export function ProductImageCarousel({
   images,
-  currentIndex,
-  onPrev,
-  onNext,
   title,
   heightClass = 'h-48',
 }: ProductImageCarouselProps) {
-  const currentImage = images[currentIndex] || '/placeholder.png';
+  const [api, setApi] = React.useState<CarouselApi>();
+  const [current, setCurrent] = React.useState(0);
+
+  // Sincroniza o índice atual sem disparar renders síncronos no effect
+  React.useEffect(() => {
+    if (!api) return;
+
+    queueMicrotask(() => {
+      setCurrent(api.selectedScrollSnap());
+    });
+
+    api.on('select', () => {
+      setCurrent(api.selectedScrollSnap());
+    });
+  }, [api]);
+
+  if (!images || images.length === 0) {
+    return (
+      <div
+        className={`relative w-full ${heightClass} overflow-hidden bg-muted flex items-center justify-center text-xs text-muted-foreground`}
+      >
+        Sem imagem
+      </div>
+    );
+  }
 
   return (
-    <div className={`relative w-full ${heightClass} overflow-hidden bg-muted`}>
-      {images.length > 0 ? (
-        <Image
-          src={currentImage}
-          alt={title}
-          fill
-          sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw'
-          className='object-cover transition-transform duration-300 group-hover:scale-105'
-        />
-      ) : (
-        <div className='w-full h-full flex items-center justify-center text-xs text-muted-foreground'>
-          Sem imagem
-        </div>
-      )}
+    <div className={`relative w-full ${heightClass} group`}>
+      <Carousel setApi={setApi} className='w-full h-full'>
+        <CarouselContent className='h-full ml-0'>
+          {images.map((img, idx) => (
+            <CarouselItem key={idx} className='relative h-full pl-0'>
+              <div
+                className={`relative w-full ${heightClass} overflow-hidden bg-muted`}
+              >
+                <Image
+                  src={img}
+                  alt={`${title} - ${idx + 1}`}
+                  fill
+                  sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw'
+                  className='object-cover transition-transform duration-300 group-hover:scale-105'
+                  priority={idx === 0}
+                />
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+      </Carousel>
 
-      {/* Botões e Indicadores (Apenas se houver mais de uma imagem) */}
+      {/* Controles condicionais perfeitamente centralizados */}
       {images.length > 1 && (
         <>
-          <button
+          <Button
             type='button'
-            onClick={onPrev}
-            className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1.5 rounded-full flex items-center justify-center h-8 w-8 opacity-80 hover:opacity-100 transition-opacity z-10'
+            onClick={() => api?.scrollPrev()}
+            className={cn(
+              checkoutButtonStyle,
+              'absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full flex items-center justify-center h-8 w-8 transition-opacity z-10',
+            )}
             aria-label='Imagem anterior'
           >
             <ChevronLeft className='h-4 w-4' />
-          </button>
-          <button
+          </Button>
+          <Button
             type='button'
-            onClick={onNext}
-            className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1.5 rounded-full flex items-center justify-center h-8 w-8 opacity-80 hover:opacity-100 transition-opacity z-10'
+            onClick={() => api?.scrollNext()}
+            className={cn(
+              checkoutButtonStyle,
+              'absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full flex items-center justify-center h-8 w-8 transition-opacity z-10',
+            )}
             aria-label='Próxima imagem'
           >
             <ChevronRight className='h-4 w-4' />
-          </button>
+          </Button>
+
+          {/* Indicadores (Bolinhas) com clique direto */}
           <div className='absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10'>
             {images.map((_, idx) => (
-              <span
+              <Button
                 key={idx}
-                className={`h-1.5 rounded-full transition-all ${
-                  idx === currentIndex ? 'w-4 bg-white' : 'w-1.5 bg-white/50'
+                type='button'
+                onClick={() => api?.scrollTo(idx)}
+                className={`h-1.5 rounded-full transition-all border-1 ${
+                  idx === current
+                    ? 'w-4 bg-[var(--primary-color)] border-black'
+                    : 'w-1.5 bg-black  border-[var(--primary-color)]'
                 }`}
+                aria-label={`Ir para imagem ${idx + 1}`}
               />
             ))}
           </div>
