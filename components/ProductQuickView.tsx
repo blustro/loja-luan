@@ -40,9 +40,6 @@ export function ProductQuickView({
   isOpen,
   onOpenChange,
   images,
-  currentImageIndex,
-  onPrevImage,
-  onNextImage,
   selectedVariant,
   onVariantChange,
   quantity,
@@ -96,11 +93,8 @@ export function ProductQuickView({
           <div className='w-full max-w-xs mx-auto sm:max-w-sm rounded-lg overflow-hidden border bg-muted'>
             <ProductImageCarousel
               images={images}
-              currentIndex={currentImageIndex}
-              onPrev={onPrevImage}
-              onNext={onNextImage}
               title={product.title}
-              heightClass='h-72 sm:h-80'
+              heightClass='h-64' // Mantenha a altura que você estava usando no drawer/modal
             />
           </div>
 

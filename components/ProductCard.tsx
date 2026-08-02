@@ -115,7 +115,7 @@ export function ProductCard({ product }: { product: Product }) {
       </CardContent>
 
       {/* Footer do Card em Desktop */}
-      <CardFooter className='p-0 mt-auto border-t hidden md:block'>
+      <CardFooter className='p-0 mt-auto border-t'>
         <AddToCartButton
           product={product}
           variant={selectedVariant}
