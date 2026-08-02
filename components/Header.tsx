@@ -1,11 +1,10 @@
-// components/Header.tsx
 import { client } from '@/sanity/lib/client';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CartSidebarWrapper } from './CartSidebarWrapper';
 import { Suspense } from 'react';
 import { SearchBar } from './SearchBar';
-import { MobileMenu } from './MobileMenu'; // Importe o menu mobile criado acima
+import { MobileMenu } from './MobileMenu';
 
 export default async function Header() {
   const data = await client.fetch(`{
@@ -28,9 +27,11 @@ export default async function Header() {
           <Link href='/' className='shrink-0'>
             {settings?.logo ? (
               <Image
+                className='w-25 h-full'
+
                 src={settings.logo}
                 alt='Logo'
-                width={85}
+                width={80}
                 height={40}
                 priority
               />
