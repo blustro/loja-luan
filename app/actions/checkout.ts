@@ -121,12 +121,14 @@ export async function createCheckoutSession(payload: CheckoutPayload) {
     }
 
     // 3. Cria a sessão de checkout no Stripe
+    const baseUrl = getBaseUrl();
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cart`,
+      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/cart`,
       metadata: {
         cep: address?.cep || '',
         logradouro: address?.logradouro || '',
@@ -147,3 +149,14 @@ export async function createCheckoutSession(payload: CheckoutPayload) {
     return { error: error.message || 'Erro ao processar pagamento.' };
   }
 }
+
+// Função auxiliar para detectar a URL base automaticamente
+const getBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return 'http://localhost:3000';
+};
