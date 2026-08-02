@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { client } from '@/sanity/lib/client';
+import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -28,6 +29,7 @@ export default async function RootLayout({
         className={inter.className}
         style={{ '--primary-color': primaryColor } as React.CSSProperties}
       >
+        <Toaster />
         {children}
       </body>
     </html>

@@ -7,6 +7,7 @@ import {
 } from '@stripe/react-stripe-js';
 import { useState } from 'react';
 import { Button } from './ui/button';
+import { toast } from 'sonner';
 
 export function CheckoutForm() {
   const stripe = useStripe();
@@ -33,7 +34,7 @@ export function CheckoutForm() {
 
     if (error) {
       console.error('Erro no Stripe:', error);
-      alert(error.message);
+      toast.error(error.message);
     }
     setLoading(false);
   };

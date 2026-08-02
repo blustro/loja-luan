@@ -6,6 +6,7 @@ import { checkoutButtonStyle } from '@/lib/styles';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/store/useCartStore';
 import { ShoppingCart } from 'lucide-react';
+import { toast } from 'sonner'; // Importação do Sonner
 
 interface AddToCartButtonProps {
   product: Product;
@@ -26,19 +27,16 @@ export function AddToCartButton({
     e.preventDefault();
     e.stopPropagation();
 
-    // Lógica inteligente: usa a variante passada ou a primeira do array
     const selectedVariant = variant ?? product.variants?.[0];
 
     if (!selectedVariant) {
-      alert('Erro: Este produto não possui variante configurada.');
+      toast.error('Este produto não possui variante configurada.');
       return;
     }
 
-    // Fallback seguro para o preço
     const unitPrice = selectedVariant.price ?? product.price ?? 0;
     const variantLabel = selectedVariant.title || selectedVariant.optionValue;
 
-    // Passando o objeto completo exigido pela interface CartItem
     addItem({
       id: selectedVariant._id,
       _id: selectedVariant._id,
@@ -53,7 +51,17 @@ export function AddToCartButton({
       optionValue: selectedVariant.optionValue,
     });
 
-    alert(`${product.title} (${variantLabel}) adicionado ao carrinho!`);
+    // Notificação elegante no topo da tela em vez do alert travado
+    toast.success(
+      `${product.title} (${variantLabel}) adicionado ao carrinho!`,
+      {
+        unstyled: true, // Remove o estilo padrão do Sonner
+        classNames: {
+          toast:
+            'bg-green-50 text-green-900 border border-green-200 p-4 rounded-lg shadow-sm flex items-center gap-3 text-xs font-bold',
+        },
+      },
+    );
   };
 
   return (

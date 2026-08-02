@@ -10,6 +10,7 @@ import { createCheckoutSession } from '@/app/actions/checkout';
 import { checkoutButtonStyle } from '@/lib/styles';
 import { cn } from '@/lib/utils';
 import { CartList } from './CartList';
+import { toast } from 'sonner';
 
 interface AddressInfo {
   cep: string;
@@ -111,7 +112,7 @@ export function CartSummary() {
     });
 
     if (response.url) window.location.href = response.url;
-    else if (response.error) alert(response.error);
+    else if (response.error) toast.error(response.error);
   };
 
   if (items.length === 0) {

@@ -1,17 +1,50 @@
 'use client';
 
-import { useCartStore } from '@/store/useCartStore';
+import { useCartStore, CartItem } from '@/store/useCartStore';
 import { Button } from '@/components/ui/button';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 export function CartList() {
   const { items, increaseQuantity, decreaseQuantity, removeItem } =
     useCartStore();
 
   if (items.length === 0) {
-    return null; // O CartSummary já lida com a mensagem de carrinho vazio
+    return null;
   }
+
+  // Função customizada para remover via botão de lixeira
+  const handleRemove = (id: string, title: string, variantTitle?: string) => {
+    removeItem(id);
+    toast.info(
+      `${title} ${variantTitle ? `(${variantTitle})` : ''} foi removido do carrinho.`,
+      {
+        unstyled: true,
+        classNames: {
+          toast:
+            'bg-red-50 text-red-900 border border-red-200 p-4 rounded-lg shadow-sm flex items-center gap-3 font-bold text-xs',
+        },
+      },
+    );
+  };
+
+  // Função para diminuir quantidade (dispara o toast se for o último item)
+  const handleDecrease = (item: CartItem) => {
+    if (item.quantity === 1) {
+      toast.info(
+        `${item.title} ${item.variantTitle ? `(${item.variantTitle})` : ''} foi removido do carrinho.`,
+        {
+          unstyled: true,
+          classNames: {
+            toast:
+              'bg-red-50 text-red-900 border border-red-200 p-4 rounded-lg shadow-sm flex items-center gap-3 font-bold text-xs',
+          },
+        },
+      );
+    }
+    decreaseQuantity(item._id);
+  };
 
   return (
     <div className='space-y-4'>
@@ -47,7 +80,6 @@ export function CartList() {
                   <h4 className='text-xs font-medium text-foreground line-clamp-2 leading-snug'>
                     {item.title}
                   </h4>
-                  {/* Utilizando variantTitle que existe na tipagem do CartItem */}
                   {item.variantTitle && (
                     <span className='inline-block text-[10px] text-muted-foreground mt-0.5 bg-muted px-1.5 py-0.5 rounded'>
                       Tam/Var: {item.variantTitle}
@@ -69,7 +101,7 @@ export function CartList() {
                     type='button'
                     variant='ghost'
                     size='icon'
-                    onClick={() => decreaseQuantity(item._id)}
+                    onClick={() => handleDecrease(item)}
                     className='h-7 w-7 rounded-none text-muted-foreground hover:bg-muted'
                   >
                     <Minus className='h-3 w-3' />
@@ -89,9 +121,12 @@ export function CartList() {
                 </div>
 
                 <Button
+                  type='button'
                   variant='ghost'
                   size='sm'
-                  onClick={() => removeItem(item._id)}
+                  onClick={() =>
+                    handleRemove(item._id, item.title, item.variantTitle)
+                  }
                   className='h-7 px-2 text-red-500 hover:text-red-600 hover:bg-red-50 text-xs gap-1'
                 >
                   <Trash2 className='h-3 w-3' />
