@@ -6,7 +6,7 @@ import { checkoutButtonStyle } from '@/lib/styles';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/store/useCartStore';
 import { ShoppingCart } from 'lucide-react';
-import { toast } from 'sonner'; // Importação do Sonner
+import { toast } from 'sonner';
 
 interface AddToCartButtonProps {
   product: Product;
@@ -35,9 +35,18 @@ export function AddToCartButton({
     }
 
     const unitPrice = selectedVariant.price ?? product.price ?? 0;
-    const variantLabel = selectedVariant.title || selectedVariant.optionValue;
 
-    // No seu AddToCartButton.tsx
+    // Função auxiliar segura para obter o rótulo da variante
+    const getVariantLabel = (v: Variant) => {
+      return !v.optionValue ||
+        v.optionValue.length > 10 ||
+        /^[a-f0-9]{8,}$/i.test(v.optionValue)
+        ? 'Tamanho Único'
+        : v.optionValue;
+    };
+
+    const variantLabel = getVariantLabel(selectedVariant);
+
     addItem({
       id: selectedVariant._id,
       _id: selectedVariant._id,
@@ -45,18 +54,18 @@ export function AddToCartButton({
       title: product.title,
       price: unitPrice,
       quantity: quantity,
-      stock: selectedVariant.stock ?? 99, // <--- Alterado de 0 para 99 como segurança
+      stock: selectedVariant.stock ?? 99,
       imageUrl: selectedVariant.imageUrl || product.imageUrl || '',
       variantTitle: variantLabel,
-      optionType: selectedVariant.optionType,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      optionType: selectedVariant.optionType as any,
       optionValue: selectedVariant.optionValue,
     });
 
-    // Notificação elegante no topo da tela em vez do alert travado
     toast.success(
       `${product.title} (${variantLabel}) adicionado ao carrinho!`,
       {
-        unstyled: true, // Remove o estilo padrão do Sonner
+        unstyled: true,
         classNames: {
           toast:
             'bg-green-50 text-green-900 border border-green-200 p-4 rounded-lg shadow-sm flex items-center gap-3 text-xs font-bold',
